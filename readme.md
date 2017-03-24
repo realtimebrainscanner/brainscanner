@@ -14,7 +14,7 @@ Device specifics:
 
 
 <!-- **System overview** -->
-![](figures/systemoverview.pdf)
+![](figures/systemoverview.png)
 
 - [] insert figure of headset
 
@@ -41,7 +41,7 @@ The data is read into a pseudo-buffer.
 ## Real-time Matlab application
 The Matlab [application]() 
 
-![](figures/processing.pdf)
+![](figures/processing.png)
 
 
 
@@ -50,3 +50,10 @@ The Matlab [application]()
 ### Brain plotting
 
 ![](figures/brainSpin.gif)
+
+
+## Credits
+
+We would like to give credit to
+- Carsten Stahlhult for the initial brain plotting functions and more
+- labstreaminglayer
