@@ -2,7 +2,8 @@
 **Using a sparse Bayesian approach**
 
 <!-- # Introduction -->
-Real-time EEG source localization is a framework for performing real-time EEG source localization. Developed at Technical University of Denmark (DTU Compute) for recording EEG signals from a Smarting mBrainTrain EEG device, performing, and visualizing source localization in real-time.
+Real-time EEG source localization is a framework for performing real-time EEG source localization. Developed at Technical University of Denmark (DTU Compute) for recording EEG signals from a Smarting mBrainTrain EEG device, performing, and visualizing source localization in real-time. 
+Currently only Windows is supported. 
 
 
 
@@ -21,7 +22,7 @@ Device specifics:
 
 The headset connects to a computer via Bluetooth using BlueSoleil Bluetooth dongle that makes the device available as a Serial COM interface. See [mBrainTrain user manual](https://mbraintrain.com/wp-content/uploads/2016/08/SMARTING-User-Manual.pdf) for more details on this.
 
-Using the OpenVIBE Acquisition Server, the data is sampled from the EGE device and made available through lab streaming layer ([LSL](https://github.com/sccn/labstreaminglayer)). By using the [lab streaming layer library for Matlab](https://github.com/sccn/labstreaminglayer/tree/master/LSL/liblsl-Matlab) the data is read into the Matlab application. 
+Using the OpenVIBE Acquisition Server, the data is sampled from the EEG device and made available through lab streaming layer ([LSL](https://github.com/sccn/labstreaminglayer)). By using the [lab streaming layer library for Matlab](https://github.com/sccn/labstreaminglayer/tree/master/LSL/liblsl-Matlab) the data is read into the Matlab application. 
 
 
 ### Setting up the connection
@@ -34,6 +35,7 @@ Replace the OpenViBE default config file with [this one]().
 ### Reading data
 
 **"Data buffer"**
+
 The data is read into a pseudo-buffer with a buffer size of 64 samples equal to two blocks (of each 32 samples) from the OpenViBE Acquisition Server. 
 
 
@@ -52,8 +54,13 @@ The Matlab [application]()
 ![](figures/brainSpin.gif)
 
 
-## Credits
+## Acknowledgment
 
-We would like to give credit to
+This work is supported by 
+
+[BaSiCs project by DTU and DRCMR](http://www.drcmr.dk/basics)
+
+**Furthermore, we would like to give credit to**
+
 - Carsten Stahlhult for the initial brain plotting functions and more
 - labstreaminglayer
