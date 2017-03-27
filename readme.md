@@ -34,7 +34,7 @@ Replace the OpenViBE default config file with [this one]().
 ### Reading data
 
 **"Data buffer"**
-The data is read into a pseudo-buffer. 
+The data is read into a pseudo-buffer with a buffer size of 64 samples equal to two blocks (of each 32 samples) from the OpenViBE Acquisition Server. 
 
 
 
