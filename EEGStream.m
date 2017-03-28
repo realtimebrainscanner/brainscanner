@@ -16,7 +16,9 @@ classdef EEGStream < handle
         replayDataFile
         showExperiment = false;
         experimentEvents
-        experimentIntervals
+        experimentEventNames
+        experimentEventFiles
+        experimentEventIntervals
         
         % Properties
         showTiming = 0;
@@ -88,7 +90,6 @@ classdef EEGStream < handle
         % Stop timer and clean up
         function stop(self, varargin)
             try stop(self.functionTimer); catch; end;
-            try self.disconnect(); catch; end;
             try delete(self.DataFigure); catch; end;
             try delete(self.FreqFigure); catch; end;
             try delete(self.Figure); catch; end;
@@ -132,13 +133,17 @@ classdef EEGStream < handle
                 % Loop processing time
                 self.t0 = tic;
                 
+                experimentData = num2cell(NaN(1,3));
                 if self.showExperiment && self.isConnected
-                    if isempty(self.experimentIntervals)
+                    if isempty(self.experimentEventIntervals)
                         self.loadExperiment(); end;
                     
-                    waitingTime = round(self.experimentIntervals(1)/self.pullInterval);
+                    waitingTime = round(self.experimentEventIntervals(1)/self.pullInterval);
 %                     runningTime = floor(self.functionTimer.TasksExecuted*self.pullInterval);
                     if mod(self.functionTimer.TasksExecuted, waitingTime) == 0
+                        experimentData{1} = self.experimentEventNames{1};
+                        experimentData{2} = self.experimentEventFiles{1};
+                        experimentData{3} = self.experimentEventIntervals(1);
                         self.experiment();
                     end
                 end
@@ -194,7 +199,9 @@ classdef EEGStream < handle
                 
                 
                 % Collect data and log
-                self.saveData(rawData, timeStamps);
+                experimentData = [num2cell(NaN(size(timeStamps,2)-1,3)); experimentData];
+%                 experimentData = [NaN(size(timeStamps,2)-1,3); experimentData];
+                self.saveData(rawData, timeStamps, experimentData);
                 self.logEvents(eventData, logTimeStamps, toc(self.t0));
                 
                 % Prepare for next sample and clean up
@@ -213,30 +220,42 @@ classdef EEGStream < handle
             end
         end
 
+        
+        %% Experimenting
         function loadExperiment(self)
-            if isempty(self.experimentEvents)
-                self.experimentEvents = [];
-                events = {'open.wav', 'close.wav','open.wav','close.wav'};
-                self.experimentIntervals = [4 4 4 4];
-                for event=events
-                    self.experimentEvents = [self.experimentEvents audioread(event{:})];
-                end
+            self.experimentEvents = {};
+            self.experimentEventNames = {'open eyes', 'close eyes', 'open eyes', 'close eyes'};
+            self.experimentEventFiles = {'open.wav', 'close.wav','open.wav','close.wav'};
+            self.experimentEventIntervals = [4 4 4 4];
+            
+            for i=1:4
+                self.experimentEvents{i} = @self.openEyeCloseEyeExperiment;
             end
         end
             
-        
         function experiment(self)
             try
-                event = self.experimentEvents(:,1);
-                self.experimentEvents(:,1) = [];
-                self.experimentIntervals(1) = [];
-                % TODO: Play sound, show image with cross for fixating eyes
-                soundsc(event,8196,16);
-                
-            catch
-%                 disp(e);
+                event = self.experimentEvents{1};
+                file = self.experimentEventFiles{1};
+                self.experimentEvents(1) = [];
+                self.experimentEventNames(1) = [];
+                self.experimentEventFiles(1) = [];
+                self.experimentEventIntervals(1) = [];
+                event(file);
+            catch e
+%                 disp(e); 
             end;
         end
+        
+        function openEyeCloseEyeExperiment(self, file)
+            event = audioread(file);
+            tic
+            soundsc(event,8196,16);
+            toc
+        end
+        
+        
+        %% Data
         
         % Preprocess data; filtering, rereference and what not
         function processedData = preProcess(self, data, timeStamps)
@@ -330,7 +349,7 @@ classdef EEGStream < handle
         
         % Other
         dataFileFormat
-        dataHeader = 'Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz,AFz,Cpz,POz,TimeStamp';
+        dataHeader = 'Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz,AFz,Cpz,POz,TimeStamp,Event,EventTime,EventFile';
         logFileFormat 
         logHeader = 'blockSize,timeStamp(end),bufferBlockSize,bufferTimeStamp(end),updateDuration';
     end
@@ -426,7 +445,7 @@ classdef EEGStream < handle
         
 
         % Save data
-        function saveData(self, data, timeStamps)
+        function saveData(self, data, timeStamps, experimentData)
             if ~self.options.saveData || ~self.isConnected
                 return; end
             if ~exist('EEGData','dir')
@@ -434,8 +453,12 @@ classdef EEGStream < handle
             if ~exist(self.options.fileName, 'file')
                 self.createDataFile(self.options.fileName, self.dataHeader); end
             
+            dataTemp = num2cell([data' timeStamps']')';
+            dataToWrite = [dataTemp experimentData]';
+%             dataToWrite = [dataTemp; experimentData'];
+
             fileID = fopen(self.options.fileName, 'a');
-            fprintf(fileID, self.dataFileFormat, [data' timeStamps']');
+            fprintf(fileID, self.dataFileFormat, dataToWrite{:,:});
             fclose(fileID);
         end
         
@@ -640,7 +663,8 @@ classdef EEGStream < handle
             for i=1:22
                 self.dataFileFormat = [self.dataFileFormat '%1.4f,'];
             end
-            self.dataFileFormat = [self.dataFileFormat '%1.6f\n'];
+%             self.dataFileFormat = [self.dataFileFormat '%1.6f\n'];
+            self.dataFileFormat = [self.dataFileFormat '%1.6f,%s,%s,%1.4f\n'];
             
             self.logFileFormat = '%d,%1.6f,%d,%1.6f,%1.6f\n';
         end
