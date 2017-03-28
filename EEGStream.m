@@ -14,8 +14,9 @@ classdef EEGStream < handle
         isConnected = false;
         replayFileName
         replayDataFile
-        showExperiment
+        showExperiment = false;
         experimentEvents
+        experimentIntervals
         
         % Properties
         showTiming = 0;
@@ -52,8 +53,6 @@ classdef EEGStream < handle
             self.QG = options.QG;
             self.verts = options.verts;
             self.faces = options.faces;
-            
-            self.setup();
         end
         
         % Open stream
@@ -71,12 +70,13 @@ classdef EEGStream < handle
         % Close stream
         function disconnect(self)
             self.isConnected = false;
-            self.inlet.close_stream();
-            self.inlet.delete();
+            try self.inlet.close_stream(); catch; end
+            try self.inlet.delete(); catch; end
         end
         
         % Starting timer and pulling data
         function start(self)
+            self.setup();
             blockSampleRate = 1/((1/250) * self.options.blockSize); % Maybe a bit more often?
             self.pullInterval = 1/blockSampleRate;
             self.functionTimer = timer('TimerFcn',{@self.processData},'Period', self.pullInterval, 'ExecutionMode', 'fixedRate');
@@ -132,11 +132,16 @@ classdef EEGStream < handle
                 % Loop processing time
                 self.t0 = tic;
                 
-%                 if self.showExperiment && mod(self.functionTimer.TasksExecuted, 16) == 0  % 3 seconds
-%                     event = self.experimentEvents(1);
-%                     self.experimentEvents(1) = [];
-%                     soundsc(y,44100,16);
-%                 end
+                if self.showExperiment && self.isConnected
+                    if isempty(self.experimentIntervals)
+                        self.loadExperiment(); end;
+                    
+                    waitingTime = round(self.experimentIntervals(1)/self.pullInterval);
+%                     runningTime = floor(self.functionTimer.TasksExecuted*self.pullInterval);
+                    if mod(self.functionTimer.TasksExecuted, waitingTime) == 0
+                        self.experiment();
+                    end
+                end
                 
                 if self.isConnected
                     % Read data - either from device or use cached block
@@ -207,7 +212,31 @@ classdef EEGStream < handle
                 self.programCallback();
             end
         end
+
+        function loadExperiment(self)
+            if isempty(self.experimentEvents)
+                self.experimentEvents = [];
+                events = {'open.wav', 'close.wav','open.wav','close.wav'};
+                self.experimentIntervals = [4 4 4 4];
+                for event=events
+                    self.experimentEvents = [self.experimentEvents audioread(event{:})];
+                end
+            end
+        end
+            
         
+        function experiment(self)
+            try
+                event = self.experimentEvents(:,1);
+                self.experimentEvents(:,1) = [];
+                self.experimentIntervals(1) = [];
+                % TODO: Play sound, show image with cross for fixating eyes
+                soundsc(event,8196,16);
+                
+            catch
+%                 disp(e);
+            end;
+        end
         
         % Preprocess data; filtering, rereference and what not
         function processedData = preProcess(self, data, timeStamps)
@@ -398,7 +427,7 @@ classdef EEGStream < handle
 
         % Save data
         function saveData(self, data, timeStamps)
-            if ~self.options.saveData && ~self.isConnected
+            if ~self.options.saveData || ~self.isConnected
                 return; end
             if ~exist('EEGData','dir')
                 mkdir EEGData; end
@@ -411,7 +440,7 @@ classdef EEGStream < handle
         end
         
         function logEvents(self, data, timeStamps, updateDuration)
-            if ~self.options.log && ~self.isConnected
+            if ~self.options.log || ~self.isConnected
                 return; end
             if ~exist('EEGData','dir')
                 mkdir EEGData; end

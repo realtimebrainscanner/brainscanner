@@ -152,6 +152,11 @@ if hObject.Value
 else
     handles.text13.String = 'Off';
     handles.eeg.stop();
+    
+    handles.togglebutton10.Value = 0;
+    handles.togglebutton11.Value = 0;
+    handles.togglebutton14.Value = 0;
+    
     handles.pushbutton5.Enable = 'on';
     handles.togglebutton6.Enable = 'on';
 end
@@ -209,7 +214,8 @@ if hObject.Value
         hObject.Value = 0;
     end
 else
-    handles.eeg.disconnect()
+    if handles.eeg.isConnected
+        handles.eeg.disconnect(); end;
     handles.togglebutton1.Enable = 'off';
     handles.text17.String = 'Off';
 end
@@ -274,3 +280,31 @@ if fileName
 else
     disp('No file selected');
 end
+
+
+% --- Executes on button press in togglebutton16.
+function togglebutton16_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton16 (see GCBO)
+if hObject.Value
+    handles.text24.String = 'On';
+else
+    handles.text24.String = 'Off';
+end
+handles.eeg.options.saveData = hObject.Value;
+handles.eeg.options.log = hObject.Value;
+
+
+% --- Executes on button press in togglebutton17.
+function togglebutton17_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton17 (see GCBO)
+
+if hObject.Value
+    handles.text25.String = 'On';
+else
+    handles.text25.String = 'Off';
+end
+% runExperiment(handles);
+handles.eeg.options.saveData = hObject.Value;
+handles.eeg.options.log = hObject.Value;
+handles.eeg.showExperiment = hObject.Value;
+

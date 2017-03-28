@@ -110,7 +110,7 @@ p = findobj(handles.axes,'Type','Patch');
 p.FaceVertexCData = cdata(:,:,1);
 colormap(handles.axes, cMAP);
 
-if diff(crange)~=0, caxis(crange), else caxis([0 1]), end
+if diff(crange)~=0, caxis(handles.axes, crange), else caxis(handles.axes, [0 1]), end
 
 % p.FaceColor = cBrain;
 % p.EdgeColor = 'none';
