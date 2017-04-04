@@ -49,7 +49,7 @@ for k=2:maxIterations
     activeSet = activeSet(activeIdx);
     
     if isempty(alphas)
-        disp('Pruned all weights');
+%         disp('Pruned all weights');
         break;
     end   
 

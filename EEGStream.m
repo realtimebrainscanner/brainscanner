@@ -83,7 +83,8 @@ classdef EEGStream < handle
             self.pullInterval = 1/blockSampleRate;
             self.functionTimer = timer('TimerFcn',{@self.processData},'Period', self.pullInterval, 'ExecutionMode', 'fixedRate');
             
-            self.showChannels = [1 2 3 4];
+            self.showChannels = [];
+            
             start(self.functionTimer); 
         end
         
@@ -268,9 +269,17 @@ classdef EEGStream < handle
                 %data(:,size(data,2)/2:size(data,2)) = [];
             end
             
-            % Artifact removal 
-            
             % Bad channel
+            
+            
+            
+            % Artifact removal 
+            %if self.options.artifactRemoval
+            [coeff, score] = pca(data');
+            score(:,1:2) = 0;      % Remove to largest principal components
+            data = (score*coeff')';
+            %end
+            
             
             % Optionally reref the data            
             if self.options.reref
@@ -349,7 +358,7 @@ classdef EEGStream < handle
         
         % Other
         dataFileFormat
-        dataHeader = 'Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz,AFz,Cpz,POz,TimeStamp,Event,EventTime,EventFile';
+        dataHeader = 'Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz,AFz,Cpz,POz,TimeStamp,Event,EventFile,EventTime';
         logFileFormat 
         logHeader = 'blockSize,timeStamp(end),bufferBlockSize,bufferTimeStamp(end),updateDuration';
     end
@@ -667,6 +676,7 @@ classdef EEGStream < handle
             self.dataFileFormat = [self.dataFileFormat '%1.6f,%s,%s,%1.4f\n'];
             
             self.logFileFormat = '%d,%1.6f,%d,%1.6f,%1.6f\n';
+            self.lastSampleTimeStamp = 0;
         end
         
         

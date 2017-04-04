@@ -6,10 +6,20 @@ if ~exist('rescaling', 'file');
 % Load data
 path = 'EEGData/';
 fileName = 'raw_22-03-2017 12-59-20.csv'; % First half 30 Hz sine and 40 Hz sine last half
+% fileName = 'raw_28-03-2017 11-03-54.csv'; % This one is odd
+% fileName = 'raw_28-03-2017 13-23-48.csv';
+
+% Other headset
+% fileName = 'raw_28-03-2017 11-09-09.csv'; 
+fileName = 'raw_04-04-2017 11-08-30.csv'; % First half 30 Hz on ch1 3 quarter 40 Hz, last quarter nothing.
+% fileName = 'raw_04-04-2017 11-22-09.csv';
+
+
+% fileName = 'raw_28-03-2017 16-56-24.csv';  % Stimuli in this one
 tableData = readtable([path fileName]);
 
 colNames = tableData.Properties.VariableNames;
-disp(colNames);
+% disp(colNames);
 
 
 
@@ -28,28 +38,47 @@ hist(timeDiff);
 fprintf('Run-time: %f \n', timeStamps(end)-timeStamps(1));
 
 %% Data
+timeStamps = tableData{:, 'TimeStamp'};
 rawData = tableData{:, colNames(1:22)}';
+
+% stimuliEvents = find(strfind(tableData{:, 24}, 'NaN') == 0);
+try 
+    stimuliIndex = find(cellfun(@(x) strcmp(x,'NaN'), tableData{:, 24}, 'UniformOutput', 1) == 0);
+    stimuli = tableData{stimuliIndex,24};
+    stimuliDuration = timeStamps(stimuliIndex);
+catch
+end
+
 data = rawData;
 
-% surf(rawData(:,1:1000))
-
-
+% Filtering
+% [b, a] = butter(4,[1 45]/(250/2));
+% for i=1:22
+%     data(i,:) = filtfilt(b, a, data(i,:));
+% end
 
 % Rereference
 % data = bsxfun(@minus, rawData, mean(rawData));
 
+% Zero mean
+% data = bsxfun(@minus, data, mean(data, 2));
 
-% Filtering
+%%
+
+zeromeanData = bsxfun(@minus, rawData, mean(rawData,2));
+
+%%% Filtering
+filtData = zeros(size(rawData));
 [b, a] = butter(4,[1 45]/(250/2));
 for i=1:22
-    data(i,:) = filtfilt(b, a, data(i,:));
+    filtData(i,:) = filtfilt(b, a, rawData(i,:));
 end
 
-% Zero mean
-data = bsxfun(@minus, data, mean(data, 2));
-
-
-
+%%
+for ch=1:size(data,1)
+    hist(filtData(ch,:),1000)
+    pause;
+end
 
 
 %% Show frequency plots
@@ -59,30 +88,108 @@ data = bsxfun(@minus, data, mean(data, 2));
 
 Fs = 250;
 
-winSize = 512; % = ~1 second
+winSize = 64; %  256 = ~1 second
 % size(data,2);
 
 [B, A] = butter(4,[1 45]/(Fs/2));
 
-figure(22);
-for i=0:floor(size(data,2)/winSize)-1
-    dataBlock = rawData(:,1+(i*winSize):((i+1)*winSize));
+figHandle = figure(22);
+
+newStimuli = [];
+stimuli = 'None';
+
+frames = [];
+
+numBlocks = floor(size(data,2)/winSize);
+
+cleanedData = zeros(size(data));
+channelVariances = zeros(size(data,1), numBlocks);
+channelVariances2 = zeros(size(data,1), numBlocks);
+
+for i=0:numBlocks-1
+    dataRange = 1+(i*winSize):((i+1)*winSize);
+    dataBlock = rawData(:,dataRange);
     
-    for j=1:22
-        dataBlock(j,:) = filtfilt(B, A, dataBlock(j,:));
+    % Stimuli mapping
+    try
+        match = ismember(stimuliIndex, dataRange);
+        if stimuliIndex(match)
+            newStimuli = tableData{stimuliIndex(match),24};
+        end
+    catch
+    end;
+    
+    for ch=1:size(data,1)
+        dataBlock(ch,:) = filtfilt(B, A, dataBlock(ch,:));
     end
     
-    [pxx, f] = pwelch(dataBlock');
-    freq = 0:Fs/(2*size(f,1)-1):Fs/2;
-    plot(freq,10*log10(pxx(:,1)));
-%     h=surf(10*log10(pxx')); view(0,90);
-%     set(h,'XData',freq);
-    pause(0.5);
+    dataBlock = bsxfun(@minus, dataBlock, mean(dataBlock,2));
+    [coeff, score, latent(:,i+1), ~, explained] = pca(dataBlock');
+    
+%     if any(latent(:,i+1) > 1e5)
+%         score(:,latent(:,i+1) > 1e5) = 0;
+%     end
+%     cleanedData(:,dataRange) = (score*coeff')';
+    
+    score(:,1:2) = 0;
+    cleanedData(:,dataRange) = (score*coeff')';
+    
+    
+    channelVariances(:,i+1) = var(dataBlock, 0, 2);
+    channelVariances2(:,i+1) = var(cleanedData(:,dataRange), 0, 2);
+%     plot(channelVariances);
+    
+    
+%     zeromeanData = dataBlock(17,:);
+%     hist(zeromeanData);
+    
+%     plot()
+
+%     pause;
+    
+%     for j=1:22
+%         dataBlock(j,:) = filtfilt(B, A, dataBlock(j,:));
+%     end
+%     
+%     [pxx, f] = pwelch(dataBlock');
+%     freq = 0:Fs/(2*size(f,1)-1):Fs/2;
+%     plot(freq,10*log10(pxx(:,1)));
+% %     h=surf(10*log10(pxx')); view(0,90);
+% %     set(h,'XData',freq);
+%     
+%     if ~isempty(newStimuli)
+%         stimuli = newStimuli{:};
+%         newStimuli = [];
+%     end
+%     
+%     title(sprintf('Stimuli: %s', stimuli)); 
+%     
+%     F = getframe(figHandle);
+%     frames = [frames F];
+%     
+%     pause(0.2);
+
+
 end
+
+% plot(cleanedData(17,:)); 
+
+%% calculate eigenvalue theshold
+maxLambda = latent(1,:)';
+Thresh = max(maxLambda);
+
+%%
+
+[w, pc, ev] = pca(chunk_norm);
+
+if any(ev > Thresh)
+    pc(:,ev > Thresh) = 0;
+end
+tStorage(:,:,c) = pc*w';
 
 
 %%
-X = fft(rawData')';
+X = fft(filtData')';
 N = size(X,2);
 
 X = 20*log10(abs(X)/N);
@@ -94,7 +201,7 @@ freq = 0:Fs/(2*size(X,2)-1):Fs/2;
 plot(freq, X(1,:));
 
 %% Welch
-[pxx, f] = pwelch(rawData');
+[pxx, f] = pwelch(filtData');
 freq = 0:Fs/(2*size(f,1)-1):Fs/2;
 
 % h=surf(10*log10(pxx'));
@@ -103,6 +210,11 @@ figure;
 plot(freq,10*log10(pxx(:,1)));
 
 
+%% Spectrogram
+% s = spectrogram(filtData', 64);
+winSize = 64;
+% [s,~,~,P] = 
+spectrogram(cleanedData(1,:),winSize,0,[],250);
 
 
 %% Source localization and 3D brain plotting
@@ -119,7 +231,7 @@ sources = [];
 
 blockSize = 64;
 
-[B, A] = butter(4,[1 45]/(250/2));
+[B, A] = butter(4,[1 40]/(250/2));
 
 for i=0:floor(size(rawData,2)/blockSize)-1
     
@@ -159,6 +271,7 @@ vert = vertface.vert2;
 sources = QG(:,basisFunctions) * sources;
 
 %%
+
 close(figure(1));
 brainOpts.hfig = figure(1);
 brainOpts.axes = axes('Parent',brainOpts.hfig,'Position',[.13 .15 .78 .75]); %self.BrainAxis;
@@ -189,7 +302,23 @@ f=figure;
 movie(f, frames, 1, 10, [30 30 30 30])
 
 
-%%
+%% Create freq spectogram gif
+
+filename = 'freqPlotStimuli.gif';
+for i=1:numel(frames)
+
+      im = frame2im(frames(i));
+      [imind,cm] = rgb2ind(im,256);
+      delay=0.15;
+      if i == 1;
+          imwrite(imind,cm,filename,'gif', 'Loopcount',inf,'DelayTime',delay);
+      else
+          imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',delay);
+      end
+end
+disp('done');
+
+%% Create rotating brain gif
 
 % figure(1)
 filename = 'brainSpin2.gif';
