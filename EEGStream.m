@@ -274,11 +274,15 @@ classdef EEGStream < handle
             
             
             % Artifact removal 
-            %if self.options.artifactRemoval
-            [coeff, score] = pca(data');
-            score(:,1:2) = 0;      % Remove to largest principal components
-            data = (score*coeff')';
-            %end
+            if self.options.artifactRemoval
+                [coeff, score, latent] = pca(data');
+                threshold = 1e5;
+                %%% score(:,1:2) = 0;       % Remove to largest principal components
+                if any(latent > threshold)  % Remove components larger than threshold
+                    score(:,latent > threshold) = 0;
+                end
+                data = (score*coeff')';
+            end
             
             
             % Optionally reref the data            
@@ -404,7 +408,7 @@ classdef EEGStream < handle
             if isempty(self.replayDataFile)
                 disp('Read file');
                 tableData = readtable([self.replayFileName]);
-                self.replayDataFile = tableData{:, 1:end}';
+                self.replayDataFile = tableData{:, 1:23}';
             end
             rawData = self.replayDataFile(1:end-1,1:self.options.blockSize);
             timeStamps = self.replayDataFile(end,1:self.options.blockSize);

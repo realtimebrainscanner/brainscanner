@@ -63,6 +63,7 @@ opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 
 % Pre processing
 [opts.filterB, opts.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
+opts.artifactRemoval = 0;
 opts.filter = 0;
 opts.zeromean = 0; 
 opts.reref = 0;
@@ -266,7 +267,7 @@ handles.eeg.stop();
 delete(hObject);
 
 
-% --- Executes on button press in pushbutton5.
+% --- Executes on button press in pushbutton5. 
 function pushbutton5_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -307,4 +308,3 @@ end
 handles.eeg.options.saveData = hObject.Value;
 handles.eeg.options.log = hObject.Value;
 handles.eeg.showExperiment = hObject.Value;
-

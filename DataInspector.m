@@ -11,8 +11,12 @@ fileName = 'raw_22-03-2017 12-59-20.csv'; % First half 30 Hz sine and 40 Hz sine
 
 % Other headset
 % fileName = 'raw_28-03-2017 11-09-09.csv'; 
-fileName = 'raw_04-04-2017 11-08-30.csv'; % First half 30 Hz on ch1 3 quarter 40 Hz, last quarter nothing.
+% fileName = 'raw_04-04-2017 11-08-30.csv'; % First half 30 Hz on ch1 3 quarter 40 Hz, last quarter nothing.
 % fileName = 'raw_04-04-2017 11-22-09.csv';
+
+% 30 seconds with both devices (same cap)
+fileName = 'raw_05-04-2017 16-11-25.csv'; % COM6
+fileName = 'raw_05-04-2017 16-13-15.csv'; % COM5
 
 
 % fileName = 'raw_28-03-2017 16-56-24.csv';  % Stimuli in this one
@@ -33,7 +37,7 @@ i = 2;
 for i=2:numel(timeStamps)
     timeDiff(i-1) = (timeStamps(i) - timeStamps(i-1))*1000;
 end
-hist(timeDiff);
+% hist(timeDiff);
 
 fprintf('Run-time: %f \n', timeStamps(end)-timeStamps(1));
 
