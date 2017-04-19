@@ -1,0 +1,5 @@
+open/closed: open eyes at the beginning. 10 sec open 10 sec closed
+- 
+open/closed: open eyes at the beginning. 15 sec open 15 sec closed
+fingertap right hand index finger: 10 sec control 5 sec rest 10 sec finger tap
+control / eyeblink: control at beginning. 10 sec control 20 sec casual blinking.
