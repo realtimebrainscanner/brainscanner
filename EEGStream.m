@@ -3,7 +3,7 @@ classdef EEGStream < handle
     properties        
         functionTimer
         % Model settings
-        numChannels = 22;
+        numChannels = 24;
         basisFunctions
         numSources
         forwardModel
@@ -83,7 +83,7 @@ classdef EEGStream < handle
             self.pullInterval = 1/blockSampleRate;
             self.functionTimer = timer('TimerFcn',{@self.processData},'Period', self.pullInterval, 'ExecutionMode', 'fixedRate');
             
-            self.showChannels = [];
+            self.showChannels = [9 10];
             
             start(self.functionTimer); 
         end
@@ -128,13 +128,15 @@ classdef EEGStream < handle
         end
         
         
-        % Updating function
+        % Updating function (every 64 samples) 
         function processData(self, varargin)
             try
                 % Loop processing time
                 self.t0 = tic;
                 
-                experimentData = num2cell(NaN(1,3));
+                
+                experimentData = num2cell(NaN(1,3)); % Create variable for saving experiment event
+                
                 if self.showExperiment && self.isConnected
                     if isempty(self.experimentEventIntervals)
                         self.loadExperiment(); end;
@@ -188,12 +190,13 @@ classdef EEGStream < handle
                     self.plotTiming(timeStamps); end
                 
                 %             self.plotResults(sources);
-                %             self.plotAllChannels(rawData);
+%                 self.plotAllChannels(rawData);
                 
                 %% Perform source localization
-                sources = self.sourceLocalization(processedData);
                 if self.showBrain
-                    self.plotBrain(sources); end
+                    sources = self.sourceLocalization(processedData);
+                    self.plotBrain(sources); 
+                end
                 
                 %% Post-process
                 % ?
@@ -250,9 +253,9 @@ classdef EEGStream < handle
         
         function openEyeCloseEyeExperiment(self, file)
             event = audioread(file);
-            tic
+%             tic
             soundsc(event,8196,16);
-            toc
+%             toc
         end
         
         
@@ -325,6 +328,9 @@ classdef EEGStream < handle
 
         % Localize sources 
         function sources = sourceLocalization(self, data) 
+            
+            data(20:21,:) = []; % Remove the two mastoids (M1, M2)
+            
             tRecovery = tic;
             switch self.options.recoveryMethod 
                 case 'MARD'
@@ -362,7 +368,7 @@ classdef EEGStream < handle
         
         % Other
         dataFileFormat
-        dataHeader = 'Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz,AFz,Cpz,POz,TimeStamp,Event,EventFile,EventTime';
+        dataHeader = 'Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz,M1,M2,AFz,Cpz,POz,TimeStamp,Event,EventFile,EventTime';
         logFileFormat 
         logHeader = 'blockSize,timeStamp(end),bufferBlockSize,bufferTimeStamp(end),updateDuration';
     end
@@ -385,7 +391,7 @@ classdef EEGStream < handle
                 
                 % Remove two reference channels. In reality M1, M2 but
                 % might be labelled as TP7 and TP8
-                data(20:21,:) = [];
+%                 data(20:21,:) = [];
             catch e
                 % display error message
                 fprintf('EEG Stream error: %s\noccurred in:\n',e.message);
@@ -408,7 +414,7 @@ classdef EEGStream < handle
             if isempty(self.replayDataFile)
                 disp('Read file');
                 tableData = readtable([self.replayFileName]);
-                self.replayDataFile = tableData{:, 1:23}';
+                self.replayDataFile = tableData{:, 1:25}';
             end
             rawData = self.replayDataFile(1:end-1,1:self.options.blockSize);
             timeStamps = self.replayDataFile(end,1:self.options.blockSize);
@@ -557,7 +563,7 @@ classdef EEGStream < handle
             end;
             
             fullSources = self.QG(:,self.basisFunctions) * sources;
-            fullSources = sum(fullSources,2);
+            fullSources = std(fullSources,[],2);
 %             fullSources = var(fullSources,0,2);
             self.brainHandles = plot3DBrain(self.brainHandles, fullSources);
 %             plot_3Dbrain(self.verts, self.faces, fullSources, opts);
@@ -592,7 +598,7 @@ classdef EEGStream < handle
                 self.setupChannelsFigure(); end;
             
             signal = [self.previousSignal data];
-            displaySize = 64; %256;
+            displaySize = 512; %256;
             toRemove = max(size(signal,2), displaySize)-displaySize;
             if toRemove
                 signal(:,1:toRemove) = []; end
@@ -673,7 +679,7 @@ classdef EEGStream < handle
             self.options.fileName = ['EEGData/raw_' datestr(datetime, 'dd-mm-yyyy HH-MM-SS') '.csv'];
             self.options.logName = ['EEGData/log' datestr(datetime, 'dd-mm-yyyy HH-MM-SS') '.csv'];
             self.dataFileFormat = '';
-            for i=1:22
+            for i=1:24
                 self.dataFileFormat = [self.dataFileFormat '%1.4f,'];
             end
 %             self.dataFileFormat = [self.dataFileFormat '%1.6f\n'];

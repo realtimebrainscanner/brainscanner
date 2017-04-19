@@ -11,7 +11,7 @@ Currently only Windows is supported.
 The used equipment is an EEG headset from Smarting mBrainTrain that connects via Bluetooth.
 Device specifics:
 - Sample rate: 250 Hz (500 Hz also possible)
-- 24 sensor EEG cap from EasyCap (22 channels + 2 mastoid)
+- 24 sensor EEG cap from EasyCap (22 channels + 2 mastoid) 
 
 
 <!-- **System overview** -->

@@ -16,7 +16,7 @@ fileName = 'raw_22-03-2017 12-59-20.csv'; % First half 30 Hz sine and 40 Hz sine
 
 % 30 seconds with both devices (same cap)
 fileName = 'raw_05-04-2017 16-11-25.csv'; % COM6
-fileName = 'raw_05-04-2017 16-13-15.csv'; % COM5
+% fileName = 'raw_05-04-2017 16-13-15.csv'; % COM5
 
 
 % fileName = 'raw_28-03-2017 16-56-24.csv';  % Stimuli in this one

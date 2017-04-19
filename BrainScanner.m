@@ -62,7 +62,7 @@ opts.blockSize = 64;
 opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 
 % Pre processing
-[opts.filterB, opts.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
+[opts.filterB, opts.filterA] = butter(4,[5 15]/(opts.samplingRate/2));
 opts.artifactRemoval = 0;
 opts.filter = 0;
 opts.zeromean = 0; 
@@ -72,7 +72,7 @@ opts.standardize = 0;
 
 % Model setup
 basis = load('model/basisFunctions.mat');
-basisFunctions = basis.IDX2;
+basisFunctions = basis.IDX2;    % 776 basis functions uni-lateral
 opts.basisFunctions = basisFunctions;
 
 easyCapModelFull = importdata('model/easyCapModel.mat');
@@ -288,6 +288,7 @@ function togglebutton16_Callback(hObject, eventdata, handles)
 % hObject    handle to togglebutton16 (see GCBO)
 if hObject.Value
     handles.text24.String = 'On';
+    handles.eeg.setup();
 else
     handles.text24.String = 'Off';
 end
