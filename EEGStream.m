@@ -27,12 +27,18 @@ classdef EEGStream < handle
         showChannels
         
         % Figure handles
-        DataFigure; DataAxis; DataSurface;
+        DataFigure; DataAxis; DataTimeseries;
         FreqFigure; FreqAxis; FreqPlot;
         SourceSurfFigure; SourceSurfAxis; SourceSurface;
         TimeFigure; TimeAxis; TimeSurface;
         ChannelsFigure;
         BrainFigure; BrainAxis;
+        
+        % MRA
+        collectedData = [];
+        numSamplesToPlot = 500;
+        rangePlot = [-150, 150];
+        channelToPlot = 9;
         
         currentShowingChannels
         programHandle
@@ -55,6 +61,8 @@ classdef EEGStream < handle
             self.QG = options.QG;
             self.verts = options.verts;
             self.faces = options.faces;
+            
+            self.collectedData = [];
         end
         
         % Open stream
@@ -510,12 +518,16 @@ classdef EEGStream < handle
             if isempty(self.DataFigure) || ~isvalid(self.DataFigure)
                 self.setupDataFigure(); end;
             
-            previousData = get(self.DataSurface, 'ZData');
-            signal = [previousData data];
-            toRemove = max(size(signal,2), 192)-192;
+            % keep most recent samples
+            self.collectedData = [self.collectedData data];
+            toRemove = max(size(self.collectedData,2), self.numSamplesToPlot)-self.numSamplesToPlot;
             if toRemove
-                signal(:,1:toRemove) = []; end               
-            set(self.DataSurface, 'ZData', signal);
+                self.collectedData(:,1:toRemove) = []; end      
+            
+            % update plot
+            set(self.DataTimeseries, 'YData', self.collectedData(self.channelToPlot, :));
+            set(gca, 'YLim', self.rangePlot);
+                        
         end
         
         function plotFrequencySpectrum(self, data)
@@ -627,9 +639,11 @@ classdef EEGStream < handle
         function setupDataFigure(self)
             self.DataFigure = figure('MenuBar','none','Name','Channels','Position', [100,100,560,420], 'CloseRequestFcn',{@self.closeFigure});
             self.DataAxis = axes('Parent',self.DataFigure,'Position',[.13 .15 .78 .75]);   % Change
-            self.DataSurface = surf(zeros(self.numChannels, self.options.blockSize*2));
+            self.DataTimeseries = plot(zeros(1, self.options.blockSize*2));
             ylabel(self.DataAxis,'Channel') ;
             xlabel(self.DataAxis,'Time');
+            grid on;
+            title(sprintf('Channel #%d', self.channelToPlot));
         end
         
         function setupFreqFigure(self)
