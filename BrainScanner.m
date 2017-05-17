@@ -62,7 +62,7 @@ opts.blockSize = 64;
 opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 
 % Pre processing
-[opts.filterB, opts.filterA] = butter(4,[5 15]/(opts.samplingRate/2));
+[opts.filterB, opts.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
 opts.artifactRemoval = 0;
 opts.filter = 0;
 opts.zeromean = 0; 
