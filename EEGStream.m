@@ -37,8 +37,7 @@ classdef EEGStream < handle
         % MRA
         collectedData = [];
         numSamplesToPlot = 500;
-        rangePlot = [-150, 150];
-        channelToPlot = 9;
+        rangeChannelPlot = 100;
         
         currentShowingChannels
         programHandle
@@ -525,8 +524,12 @@ classdef EEGStream < handle
                 self.collectedData(:,1:toRemove) = []; end      
             
             % update plot
-            set(self.DataTimeseries, 'YData', self.collectedData(self.channelToPlot, :));
-            set(gca, 'YLim', self.rangePlot);
+            offset = 0;
+            for idx_chan = 1:self.numChannels
+                set(self.DataTimeseries(idx_chan), 'YData', offset + self.collectedData(idx_chan, :));   
+                offset = offset + self.rangeChannelPlot;
+            end;
+            
                         
         end
         
@@ -639,11 +642,15 @@ classdef EEGStream < handle
         function setupDataFigure(self)
             self.DataFigure = figure('MenuBar','none','Name','Channels','Position', [100,100,560,420], 'CloseRequestFcn',{@self.closeFigure});
             self.DataAxis = axes('Parent',self.DataFigure,'Position',[.13 .15 .78 .75]);   % Change
-            self.DataTimeseries = plot(zeros(1, self.options.blockSize*2));
+            self.DataTimeseries = plot(zeros(self.numChannels, self.options.blockSize*2), 'k');
             ylabel(self.DataAxis,'Channel') ;
             xlabel(self.DataAxis,'Time');
+                                    
+            set(self.DataAxis, 'YLim', [-1*self.rangeChannelPlot, (self.numChannels)*self.rangeChannelPlot]);
+            set(self.DataAxis, 'YTick', linspace(0, (self.numChannels-1)*self.rangeChannelPlot, self.numChannels))
+            set(self.DataAxis, 'YTickLabel', 1:self.numChannels)
             grid on;
-            title(sprintf('Channel #%d', self.channelToPlot));
+
         end
         
         function setupFreqFigure(self)
