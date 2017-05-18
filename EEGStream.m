@@ -36,8 +36,6 @@ classdef EEGStream < handle
         
         % for plotting
         collectedData = [];
-        numSamplesToPlot = 15000;
-        rangeChannelPlot = 100;
         
         % for artifact removal
         collectedCalibrationData = 0;
@@ -295,10 +293,7 @@ classdef EEGStream < handle
             % Artifact removal 
             if self.options.artifactRemoval
                 if self.artifactRemovalReady
-                    
-                    tic();
                     [data, self.asr_state] = asr_process(data, self.options.samplingRate, self.asr_state);
-                    toc()
                 else
                     
                     if self.collectedCalibrationData
@@ -549,7 +544,7 @@ classdef EEGStream < handle
             
             % keep most recent samples
             self.collectedData = [self.collectedData data];
-            toRemove = max(size(self.collectedData,2), self.numSamplesToPlot)-self.numSamplesToPlot;
+            toRemove = max(size(self.collectedData,2), self.options.numSamplesToPlot)-self.options.numSamplesToPlot;
             if toRemove
                 self.collectedData(:,1:toRemove) = []; end      
             
@@ -557,7 +552,7 @@ classdef EEGStream < handle
             offset = 0;
             for idx_chan = 1:self.numChannels
                 set(self.DataTimeseries(idx_chan), 'YData', offset + self.collectedData(idx_chan, :));   
-                offset = offset + self.rangeChannelPlot;
+                offset = offset + self.options.rangeChannelPlot;
             end;
             
                         
@@ -676,8 +671,8 @@ classdef EEGStream < handle
             ylabel(self.DataAxis,'Channel') ;
             xlabel(self.DataAxis,'Time');
                                     
-            set(self.DataAxis, 'YLim', [-1*self.rangeChannelPlot, (self.numChannels)*self.rangeChannelPlot]);
-            set(self.DataAxis, 'YTick', linspace(0, (self.numChannels-1)*self.rangeChannelPlot, self.numChannels))
+            set(self.DataAxis, 'YLim', [-1*self.options.rangeChannelPlot, (self.numChannels)*self.options.rangeChannelPlot]);
+            set(self.DataAxis, 'YTick', linspace(0, (self.numChannels-1)*self.options.rangeChannelPlot, self.numChannels))
             set(self.DataAxis, 'YTickLabel', 1:self.numChannels)
             grid on;
 

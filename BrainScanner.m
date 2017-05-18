@@ -74,8 +74,11 @@ opts.standardize = 0;
 
 
 % artifact removal
-opts.numSamplesCalibrationData = 30*opts.samplingRate;
+opts.numSamplesCalibrationData = 60*opts.samplingRate;
 
+% plotting
+opts.numSamplesToPlot = 1000;
+opts.rangeChannelPlot = 100;
 
 % Model setup
 basis = load('model/basisFunctions.mat');
