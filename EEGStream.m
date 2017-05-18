@@ -34,10 +34,19 @@ classdef EEGStream < handle
         ChannelsFigure;
         BrainFigure; BrainAxis;
         
-        % MRA
+        % for plotting
         collectedData = [];
-        numSamplesToPlot = 500;
+        numSamplesToPlot = 15000;
         rangeChannelPlot = 100;
+        
+        % for artifact removal
+        collectedCalibrationData = 0;
+        artifactRemovalReady = 0;
+        calibrationData = []
+        asr_state = struct;
+        
+               
+        
         
         currentShowingChannels
         programHandle
@@ -285,13 +294,34 @@ classdef EEGStream < handle
             
             % Artifact removal 
             if self.options.artifactRemoval
-                [coeff, score, latent] = pca(data');
-                threshold = 1e5;
-                %%% score(:,1:2) = 0;       % Remove to largest principal components
-                if any(latent > threshold)  % Remove components larger than threshold
-                    score(:,latent > threshold) = 0;
-                end
-                data = (score*coeff')';
+                if self.artifactRemovalReady
+                    
+                    tic();
+                    [data, self.asr_state] = asr_process(data, self.options.samplingRate, self.asr_state);
+                    toc()
+                else
+                    
+                    if self.collectedCalibrationData
+                        % we are done collecting calibration data, so we can now prepare the artifact removal method
+                        self.asr_state = asr_calibrate(self.calibrationData, self.options.samplingRate);
+                        self.artifactRemovalReady = 1;
+                        
+                        if self.options.verbose
+                            fprintf('ASR: ready.\n'); end;
+                    else
+                        % collect samples 
+                        self.calibrationData = [self.calibrationData data];
+                        
+                        if size(self.calibrationData, 2) >= self.options.numSamplesCalibrationData
+                            self.collectedCalibrationData = 1;
+                        end;
+                        
+                        if self.options.verbose
+                            fprintf('ASR: Collected %2.1f%% of calibration data...\n', size(self.calibrationData, 2)/self.options.numSamplesCalibrationData*100);    end;
+                        
+                    end;
+                end;
+
             end
             
             

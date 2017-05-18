@@ -45,6 +45,9 @@ if ~exist('rescaling', 'file');
 
 if ~exist('lsl_loadlib','file')
     addpath(genpath('libraries/liblsl-Matlab')); end
+
+if ~exist('asr_process','file')
+    addpath(genpath('libraries/BCILAB')); end
 try 
     lib = lsl_loadlib(env_translatepath('libraries/liblsl-Matlab:/bin'));
 catch
@@ -70,6 +73,10 @@ opts.reref = 0;
 opts.standardize = 0; 
 
 
+% artifact removal
+opts.numSamplesCalibrationData = 30*opts.samplingRate;
+
+
 % Model setup
 basis = load('model/basisFunctions.mat');
 basisFunctions = basis.IDX2;    % 776 basis functions uni-lateral
@@ -92,6 +99,7 @@ opts.QG = basis.QG;
 opts.recoveryMethod = 'MARD';
 opts.saveData = 0;
 opts.log = 0;
+opts.verbose = 1;
 
 handles.eeg = EEGStream(lib, opts, handles);
 
@@ -309,3 +317,19 @@ end
 handles.eeg.options.saveData = hObject.Value;
 handles.eeg.options.log = hObject.Value;
 handles.eeg.showExperiment = hObject.Value;
+
+
+% --- Executes on button press in togglebutton18.
+function togglebutton18_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton18 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton18
+if hObject.Value
+    handles.text26.String = 'On';
+else
+    handles.text26.String = 'Off';
+end
+
+handles.eeg.options.artifactRemoval = hObject.Value;
