@@ -37,8 +37,10 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 %% Load libraries
-if ~exist('MARDv2','file')
-    addpath(genpath('functions')); end
+%if ~exist('MARDv2','file')
+%    addpath(genpath('functions')); end
+
+addpath(genpath('functions'))
 
 if ~exist('rescaling', 'file');
     addpath('libraries/BASS_v01112012'); end
@@ -68,28 +70,57 @@ opts.filter = 0;
 opts.zeromean = 0; 
 opts.reref = 0;
 opts.standardize = 0; 
+opts.bad_chans=[5 21];
 
 
 % Model setup
-basis = load('model/basisFunctions.mat');
-basisFunctions = basis.IDX2;    % 776 basis functions uni-lateral
+basis = load('model/basis_functions_24ch.mat','Qg');
+basisFunctions = basis.Qg;    % 569 basis functions uni-lateral
 opts.basisFunctions = basisFunctions;
 
-easyCapModelFull = importdata('model/easyCapModel.mat');
-opts.forwardModel = easyCapModelFull(:, basisFunctions);
-opts.numSources = numel(basisFunctions);
+easyCapModelFull = load('model/Gain_mbraintrain_24ch.mat','Gain');
 
-vertface = load('model/vertface');
-opts.faces = vertface.face2;
-opts.verts = vertface.vert2;
-opts.QG = basis.QG;
+easyCapModelFull=easyCapModelFull.Gain;
+easyCapModelFull(opts.bad_chans,:)=[];
+no_chan=size(easyCapModelFull,1);
+easyCapModelFull=(eye(no_chan)-1/no_chan)*easyCapModelFull;
+opts.forwardModel = easyCapModelFull*basisFunctions';
+opts.numSources = size(basisFunctions,1);
+channels=load('model/Gain_mbraintrain_24ch.mat','Channel');
+opts.channames={channels.Channel(:).Name};clear channels
+
+vertface = load('model/vertface_24ch_ICBMtemp');
+opts.faces = vertface.face;
+opts.verts = vertface.vert;
+opts.numChannels = 24-numel(opts.bad_chans);
+
+%opts.QG = basis.QG;
+
+% % Old Model setup
+% basis = load('model/basisFunctions.mat');
+% basisFunctions = basis.IDX2;    % 776 basis functions uni-lateral
+% opts.basisFunctions = basisFunctions;
+% 
+% easyCapModelFull = importdata('model/easyCapModel.mat');
+% opts.forwardModel = easyCapModelFull(:, basisFunctions);
+% opts.numSources = numel(basisFunctions);
+% 
+% vertface = load('model/vertface');
+% opts.faces = vertface.face2;
+% opts.verts = vertface.vert2;
+% opts.QG = basis.QG;
+
+
 
 % basisFunctions = sort(randperm(size(easyCapModelFull,2), numSources));
 % forwardModel = easyCapModelFull(:, basisFunctions);
 % opts.numSources = 400;
 
 % Other
-opts.recoveryMethod = 'MARD';
+opts.recoveryMethod = 'teVG';%'MARD';
+if strcmp(opts.recoveryMethod,'teVG');
+    opts.gamma=-100;    
+end
 opts.saveData = 0;
 opts.log = 0;
 
@@ -309,3 +340,17 @@ end
 handles.eeg.options.saveData = hObject.Value;
 handles.eeg.options.log = hObject.Value;
 handles.eeg.showExperiment = hObject.Value;
+
+
+% --- Executes on button press in togglebutton18.
+function togglebutton18_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton18 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.eeg.options.trainVG = hObject.Value;
+if hObject.Value
+    handles.text26.String = 'On';
+else
+    handles.text26.String = 'Off';
+end
+% Hint: get(hObject,'Value') returns toggle state of togglebutton18
