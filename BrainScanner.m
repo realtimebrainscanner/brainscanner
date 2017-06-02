@@ -60,7 +60,7 @@ opts.bufferrange = 10; % (in seconds)
 opts.channelrange = 1:24;
 
 opts.samplingRate = 250;
-opts.blockSize = 64;
+opts.blockSize = 32;
 opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 
 % Pre processing
