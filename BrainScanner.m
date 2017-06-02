@@ -123,7 +123,8 @@ if strcmp(opts.recoveryMethod,'teVG');
 end
 opts.saveData = 0;
 opts.log = 0;
-
+opts.trainVG = 0;
+opts.numSamplesCalibrationVGData=128;
 handles.eeg = EEGStream(lib, opts, handles);
 
 
@@ -347,10 +348,11 @@ function togglebutton18_Callback(hObject, eventdata, handles)
 % hObject    handle to togglebutton18 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.eeg.options.trainVG = hObject.Value;
 if hObject.Value
     handles.text26.String = 'On';
 else
     handles.text26.String = 'Off';
 end
+handles.eeg.options.trainVG = hObject.Value;
+
 % Hint: get(hObject,'Value') returns toggle state of togglebutton18
