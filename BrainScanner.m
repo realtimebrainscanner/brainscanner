@@ -119,12 +119,13 @@ opts.numChannels = 24-numel(opts.bad_chans);
 % Other
 opts.recoveryMethod = 'teVG';%'MARD';
 if strcmp(opts.recoveryMethod,'teVG');
+    load gamma
     opts.gamma=-100;    
 end
 opts.saveData = 0;
 opts.log = 0;
 opts.trainVG = 0;
-opts.numSamplesCalibrationVGData=128;
+opts.numSamplesCalibrationVGData=4*opts.blockSize;
 handles.eeg = EEGStream(lib, opts, handles);
 
 
@@ -354,5 +355,4 @@ else
     handles.text26.String = 'Off';
 end
 handles.eeg.options.trainVG = hObject.Value;
-
 % Hint: get(hObject,'Value') returns toggle state of togglebutton18

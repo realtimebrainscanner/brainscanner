@@ -44,7 +44,9 @@ classdef EEGStream < handle
         
         % trainVG
         collectedCalibrationVGData = 0;
-        calibrationVGData = []
+        calibrationVGData = [];
+        gamma_medianAll=[];
+        gamma_meanAll=[];
         
     end
     
@@ -189,6 +191,10 @@ classdef EEGStream < handle
                 %% Pre-process
                 processedData = self.preProcess(rawData, timeStamps);
                 
+                %% train VG
+                 if self.options.trainVG
+                    [gamma_mean,gamma_median]=self.trainVG(processedData);
+                 end
                 
                 %% Feature extraction
                 % featureData = self.featureExtraction(processedData, timeStamps);
@@ -319,7 +325,10 @@ classdef EEGStream < handle
                 data = bsxfun(@times, data, 1./std(data, [], 2)); end
             
             processedData = data;
+              
         end
+        
+
         
         function [featureData, freq] = featureExtraction(self, data, timeStamps)
             Fs = self.options.samplingRate;
@@ -358,7 +367,7 @@ classdef EEGStream < handle
                     [~, ~, sources, ~] = MARDv2(alphas_init, beta_init, self.forwardModel, data);
                 case 'teVG'
                     opts.run_prune=1;opts.prune=1e-2;opts.pnorm = 1;%opts.min_gamma=-100;
-                    %[gamma_mean1,gamma_median,error_val] = teVGGD_wcross(self.forwardModel,Y(:,1:T*2),opts); % find sparsity from prev. section
+                    %[gamma_mean1,gamma_median,error_val] = teVGGD_wcross(self.forwardModel,data,opts); % find sparsity from prev. section
                     [sources,~,~,~] = teVGGD(self.forwardModel,data,self.options.gamma,opts);
                     
                     
@@ -370,35 +379,23 @@ classdef EEGStream < handle
             self.recoveryTime = toc(tRecovery);
             %             disp(self.recoveryTime);
         end
+        
         function [gamma_mean,gamma_median] = trainVG(self, data)
             
-            
-            if self.collectedCalibrationVGData
-                % we are done collecting calibration data, so we can now prepare the artifact removal method
+            % collect samples
+            self.calibrationVGData = [self.calibrationVGData data];
+            if size(self.calibrationVGData, 2) == self.options.numSamplesCalibrationVGData;
+                % we are done collecting calibration data, so we can now
+                % trainVG
                 opts.run_prune=1;opts.prune=1e-2;opts.pnorm = 1;
-                [gamma_mean, gamma_median]= teVG_wcross(self.forwardModel,self.calibrationVGData, opts);
-                self.artifactRemovalReady = 1;
-                
-                if self.options.verbose
-                    fprintf('ASR: ready.\n'); end;
-            else
-                % collect samples
-                self.calibrationData = [self.calibrationData data];
-                
-                if size(self.calibrationVGData, 2) = self.options.numSamplesCalibrationVGData;
-                    self.collectedCalibrationVGData = 1;
-                end;
-                
-                if self.options.verbose
-                    fprintf('ASR: Collected %2.1f%% of calibration data...\n', size(self.calibrationData, 2)/self.options.numSamplesCalibrationData*100);    end;
-                
-            end;
-            
-            
-            opts.run_prune=1;opts.prune=1e-2;opts.pnorm = 1;%opts.min_gamma=-100;
-            %[gamma_mean1,gamma_median,error_val] = teVGGD_wcross(self.forwardModel,Y(:,1:T*2),opts); % find sparsity from prev. section
-            [sources,~,~,~] = teVGGD(self.forwardModel,data,self.options.gamma,opts);
-            
+                [gamma_mean, gamma_median]= teVGGD_wcross(self.forwardModel,self.calibrationVGData, opts);
+                self.calibrationVGData = [];
+                self.gamma_meanAll = [self.gamma_meanAll gamma_mean];gmean=self.gamma_meanAll;
+                self.gamma_medianAll = [self.gamma_medianAll gamma_median];gmedian=self.gamma_medianAll;
+                save gamma gmedian gmean
+            else 
+                gamma_mean=NaN;gamma_median=NaN;
+            end
         end
     end
     
@@ -473,7 +470,6 @@ classdef EEGStream < handle
             end
             rawData = self.replayDataFile(1:end-1,1:self.options.blockSize);
             timeStamps = self.replayDataFile(end,1:self.options.blockSize);
-            timeStamps(1)
             %             self.replayDataFile(1:end-1,1:self.options.blockSize) = [];
             self.replayDataFile(:,1:self.options.blockSize) = [];
         end
