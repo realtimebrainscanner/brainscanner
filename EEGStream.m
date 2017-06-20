@@ -19,6 +19,9 @@ classdef EEGStream < handle
         experimentEventNames
         experimentEventFiles
         experimentEventIntervals
+        ClassificationModel
+        PredictData=[];
+        predicted_stim=[];
         
         % Properties
         showTiming = 0;
@@ -101,6 +104,9 @@ classdef EEGStream < handle
             self.showChannels = [9 10];
             
             start(self.functionTimer);
+            self.PredictData=[];
+            self.predicted_stim=[];
+            
         end
         
         % Stop timer and clean up
@@ -195,7 +201,7 @@ classdef EEGStream < handle
                  if self.options.trainVG
                     [gamma_mean,gamma_median]=self.trainVG(processedData);
                  end
-                
+                %% train Model
                 %% Feature extraction
                 % featureData = self.featureExtraction(processedData, timeStamps);
                 
@@ -218,6 +224,9 @@ classdef EEGStream < handle
                 
                 %% Post-process
                 % ?
+                if isfield(self.ClassificationModel,'model');
+                self.classify(rawData);
+                end
                 
                 
                 % Collect data and log
@@ -290,10 +299,16 @@ classdef EEGStream < handle
                 data(self.options.bad_chans,:)=[];
             end
             
-            
             if self.options.filter
                 for i=1:self.numChannels
-                    data(i,:) = filtfilt(self.options.filterB, self.options.filterA, data(i,:));
+                    %if ~isfield(self.options,'filterF');
+                    %data(i,:)=data(i,:).*hann(length(data(i,:)));
+                    %[data(i,:), zf(i,:)] = filter(self.options.filterB, self.options.filterA, data(i,:));
+                [data(i,:)] = filtfilt(self.options.filterB, self.options.filterA, data(i,:));
+                  %  else
+
+                  %  [data(i,:), zf(i,:)] = filter(self.options.filterB, self.options.filterA, data(i,:),self.options.filterF(i,:));
+                  %  end
                 end
                 %data(:,size(data,2)/2:size(data,2)) = [];
             end
@@ -370,7 +385,6 @@ classdef EEGStream < handle
                     %[gamma_mean1,gamma_median,error_val] = teVGGD_wcross(self.forwardModel,data,opts); % find sparsity from prev. section
                     [sources,~,~,~] = teVGGD(self.forwardModel,data,self.options.gamma,opts);
                     
-                    
                 otherwise % Do Ridge
                     lambda = 1e5;
                     PhiTPhiReg = self.forwardModel'*self.forwardModel + lambda*eye(self.numSources);
@@ -388,15 +402,38 @@ classdef EEGStream < handle
                 % we are done collecting calibration data, so we can now
                 % trainVG
                 opts.run_prune=1;opts.prune=1e-2;opts.pnorm = 1;
+                 
                 [gamma_mean, gamma_median]= teVGGD_wcross(self.forwardModel,self.calibrationVGData, opts);
+               
                 self.calibrationVGData = [];
                 self.gamma_meanAll = [self.gamma_meanAll gamma_mean];gmean=self.gamma_meanAll;
                 self.gamma_medianAll = [self.gamma_medianAll gamma_median];gmedian=self.gamma_medianAll;
                 save gamma gmedian gmean
             else 
+                size(self.calibrationVGData)
                 gamma_mean=NaN;gamma_median=NaN;
+                self.gamma_meanAll = [self.gamma_meanAll gamma_mean];gmean=self.gamma_meanAll;
+                self.gamma_medianAll = [self.gamma_medianAll gamma_median];gmedian=self.gamma_medianAll;
+                save gamma gmedian gmean
             end
         end
+        function classify(self, data)
+            
+            % collect samples
+            self.PredictData = [self.PredictData data];
+            if size(self.PredictData, 2) >= 128;
+                % we are done collecting data for prediction
+                tic
+            [predicted_stim,~]=applyModel(self,self.ClassificationModel,self.PredictData(:,end-127:end));
+                toc
+            self.predicted_stim=[self.predicted_stim, predicted_stim];PredictStim=self.predicted_stim;
+            save PredictStim PredictStim
+            self.PredictData = [];
+            else 
+                
+            end
+        end
+        
     end
     
     

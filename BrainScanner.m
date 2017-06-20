@@ -5,11 +5,11 @@ function varargout = BrainScanner(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @main_OpeningFcn, ...
-                   'gui_OutputFcn',  @main_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @main_OpeningFcn, ...
+    'gui_OutputFcn',  @main_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -47,13 +47,13 @@ if ~exist('rescaling', 'file');
 
 if ~exist('lsl_loadlib','file')
     addpath(genpath('libraries/liblsl-Matlab')); end
-try 
+try
     lib = lsl_loadlib(env_translatepath('libraries/liblsl-Matlab:/bin'));
 catch
     lib = lsl_loadlib();
 end
 
-%% Setup stream and settings 
+%% Setup stream and settings
 
 opts.eegStreamName = 'openvibeSignal'; %'EEG';
 opts.bufferrange = 10; % (in seconds)
@@ -67,10 +67,10 @@ opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 [opts.filterB, opts.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
 opts.artifactRemoval = 0;
 opts.filter = 0;
-opts.zeromean = 0; 
+opts.zeromean = 0;
 opts.reref = 0;
-opts.standardize = 0; 
-opts.bad_chans=[5 21];
+opts.standardize = 0;
+opts.bad_chans=[];%[5 21];
 
 
 % Model setup
@@ -83,7 +83,7 @@ easyCapModelFull = load('model/Gain_mbraintrain_24ch.mat','Gain');
 easyCapModelFull=easyCapModelFull.Gain;
 easyCapModelFull(opts.bad_chans,:)=[];
 no_chan=size(easyCapModelFull,1);
-easyCapModelFull=(eye(no_chan)-1/no_chan)*easyCapModelFull;
+easyCapModelFull=(eye(no_chan)-1/no_chan)*easyCapModelFull; % set gain to have average reference
 opts.forwardModel = easyCapModelFull*basisFunctions';
 opts.numSources = size(basisFunctions,1);
 channels=load('model/Gain_mbraintrain_24ch.mat','Channel');
@@ -100,11 +100,11 @@ opts.numChannels = 24-numel(opts.bad_chans);
 % basis = load('model/basisFunctions.mat');
 % basisFunctions = basis.IDX2;    % 776 basis functions uni-lateral
 % opts.basisFunctions = basisFunctions;
-% 
+%
 % easyCapModelFull = importdata('model/easyCapModel.mat');
 % opts.forwardModel = easyCapModelFull(:, basisFunctions);
 % opts.numSources = numel(basisFunctions);
-% 
+%
 % vertface = load('model/vertface');
 % opts.faces = vertface.face2;
 % opts.verts = vertface.vert2;
@@ -120,12 +120,12 @@ opts.numChannels = 24-numel(opts.bad_chans);
 opts.recoveryMethod = 'teVG';%'MARD';
 if strcmp(opts.recoveryMethod,'teVG');
     load gamma
-    opts.gamma=-100;    
+    opts.gamma=-100;
 end
 opts.saveData = 0;
 opts.log = 0;
 opts.trainVG = 0;
-opts.numSamplesCalibrationVGData=4*opts.blockSize;
+opts.numSamplesCalibrationVGData=20*opts.blockSize;
 handles.eeg = EEGStream(lib, opts, handles);
 
 
@@ -244,7 +244,7 @@ if hObject.Value
         handles.text17.String = 'Connected';
         handles.togglebutton1.Enable = 'on';
         handles.text23.String = 'No file';
-    else 
+    else
         hObject.Value = 0;
     end
 else
@@ -300,7 +300,7 @@ handles.eeg.stop();
 delete(hObject);
 
 
-% --- Executes on button press in pushbutton5. 
+% --- Executes on button press in pushbutton5.
 function pushbutton5_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -311,6 +311,7 @@ if fileName
     handles.text23.String = 'File loaded';
     handles.togglebutton1.Enable = 'on';
     handles.eeg.replayFileName = strcat(path,fileName);
+    handles.eeg.replayDataFile=[];
 else
     disp('No file selected');
 end
@@ -356,3 +357,20 @@ else
 end
 handles.eeg.options.trainVG = hObject.Value;
 % Hint: get(hObject,'Value') returns toggle state of togglebutton18
+
+% --- Executes on button press in togglebutton19.
+function togglebutton19_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton19 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if hObject.Value
+    handles.text27.String = 'On';
+    [options.filterB, options.filterA] = butter(4,[5 15]/(handles.eeg.options.samplingRate/2));
+    options.samplingRate=handles.eeg.options.samplingRate;
+    handles.eeg.ClassificationModel=trainModel(options);
+else
+    handles.text27.String = 'Off';
+end
+handles.eeg.options.trainModel = hObject.Value;
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton19
