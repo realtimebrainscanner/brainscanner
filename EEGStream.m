@@ -106,6 +106,7 @@ classdef EEGStream < handle
             start(self.functionTimer);
             self.PredictData=[];
             self.predicted_stim=[];
+               
             
         end
         
@@ -733,7 +734,7 @@ classdef EEGStream < handle
             set(self.DataAxis, 'YLim', [-1*self.rangeChannelPlot, (self.numChannels)*self.rangeChannelPlot]);
             set(self.DataAxis, 'YTick', linspace(0, (self.numChannels-1)*self.rangeChannelPlot, self.numChannels))
             %set(self.DataAxis, 'YTickLabel', 1:self.numChannels)
-            set(self.DataAxis, 'YTickLabel', self.options.Channames)
+            set(self.DataAxis, 'YTickLabel', self.options.channames)
             grid on;
             
         end
