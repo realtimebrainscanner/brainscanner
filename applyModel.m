@@ -8,7 +8,7 @@ run_source=out.run_source;
 uf=out.uf;% upsample factor
 num_channels=24;
 %%
-data(1,1)
+
 % filter and rereference
 data_preprocessed =NaN(size(data));
 
