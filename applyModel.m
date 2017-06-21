@@ -95,12 +95,14 @@ features = bsxfun(@rdivide, bsxfun(@minus, features, out.m), out.s);
 
 % predict
 %fprintf('Predicting...')
-predicted_stim = predict(out.model, features);
-if predicted_stim>0.5
-    fprintf('Closed eyes, prob=%3.2f\n\n',predicted_stim)
-else
-    fprintf('Open eyes, prob=%3.2f\n\n',predicted_stim)
-end
+if self.options.print_predicted_label
+    predicted_stim = predict(out.model, features);
+    if predicted_stim>0.5
+        fprintf('Closed eyes, prob=%3.2f\n\n',predicted_stim)
+    else
+        fprintf('Open eyes, prob=%3.2f\n\n',predicted_stim)
+    end
+end;
 % map from probabilities to labels
 
 out.predicted_stim=predicted_stim;

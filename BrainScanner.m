@@ -94,6 +94,9 @@ opts.faces = vertface.face;
 opts.verts = vertface.vert;
 opts.numChannels = 24-numel(opts.bad_chans);
 
+% prediction
+opts.print_predicted_label
+
 %opts.QG = basis.QG;
 
 % % Old Model setup
