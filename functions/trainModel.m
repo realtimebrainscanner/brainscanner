@@ -1,7 +1,7 @@
 function out=trainModel(options)
 out.options=options;
-addpath C:\Users\sofha\Documents\realtime\git\brainscanner\functions
-addpath(genpath('C:\Users\sofha\Documents\realtime\chronux_2_11'))
+%addpath C:\Users\sofha\Documents\realtime\git\brainscanner\functions
+%addpath(genpath('C:\Users\sofha\Documents\realtime\chronux_2_11'))
 % sampling rate
 fs=options.samplingRate;
 % number of channels
