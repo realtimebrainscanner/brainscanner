@@ -1,7 +1,6 @@
 function [predicted_stim, out]=applyModel(self,out,data)
 
-addpath C:\Users\sofha\Documents\realtime\git\brainscanner\functions
-addpath(genpath('C:\Users\sofha\Documents\realtime\chronux_2_11'))
+%addpath C:\Users\sofha\Documents\realtime\git\brainscanner\functions
 % sampling rate
 fs=self.options.samplingRate;
 % number of channels
