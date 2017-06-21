@@ -22,6 +22,7 @@ stims = cell(num_trials, 1);
 for idx_trial = 1:num_trials
     fprintf('Choose stim file\n');
     [filename_stim,PathName] = uigetfile('*.mat');
+    fprintf('Loading stim file %s\n',filename_stim)
     
     stim_data = load([PathName,filename_stim], 'stim');
     stim_data.stim=repmat(stim_data.stim,[uf,1]);
@@ -30,6 +31,7 @@ for idx_trial = 1:num_trials
     
     fprintf('Choose data file\n');
     [filename_data,PathName] = uigetfile('*.csv');
+    fprintf('Loading data file %s\n',filename_data)
     subject_data = csvread([PathName,filename_data], 1, 0);%% columns 0
     
     % remove first 5s.
