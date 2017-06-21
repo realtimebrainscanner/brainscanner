@@ -40,9 +40,9 @@
 % Settings:
 try min_gamma = opts.min_gamma; catch; min_gamma = -100; end; % Minimum gamma value
 try max_gamma = opts.max_gamma; catch; max_gamma = -10; end; % Maximum gamma value
-try n_gamma = opts.n_gamma; catch; n_gamma = 20; end; % Number of gamma values
+try n_gamma = opts.n_gamma; catch; n_gamma = 10; end; % Number of gamma values
 try Cf = opts.Cf; catch;  Cf=4; end; % Number of folds in the cross-validation
-try opts.max_iter = opts.max_iter; catch; opts.max_iter = 1000; end; % Maximum number of iterations
+try opts.max_iter = opts.max_iter; catch; opts.max_iter = 100; end; % Maximum number of iterations
 
 gamma_all = linspace(min_gamma,max_gamma,n_gamma); % Gamma sequence
 K = size(A,1);

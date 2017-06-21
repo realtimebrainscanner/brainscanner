@@ -10,7 +10,7 @@ run_source=input('Run source localization (0/1): ');
 out.run_source=run_source;
 uf=2;% upsample factor
 out.uf=uf;
-run_calcGamma=0;
+run_calcGamma=1;
 %% Load data
 
 num_trials = 1;
