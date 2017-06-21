@@ -3,3 +3,4 @@ libraries/BCILAB-devel/
 libraries/eeglab13_6_5b/
 *.asv
 EEGData/old_recordings/
+*.csv
