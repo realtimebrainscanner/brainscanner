@@ -119,7 +119,6 @@ opts.numChannels = 24-numel(opts.bad_chans);
 % Other
 opts.recoveryMethod = 'teVG';%'MARD';
 if strcmp(opts.recoveryMethod,'teVG');
-    load gamma
     opts.gamma=-100;
 end
 opts.saveData = 0;
@@ -374,3 +373,5 @@ end
 handles.eeg.options.trainModel = hObject.Value;
 
 % Hint: get(hObject,'Value') returns toggle state of togglebutton19
+
+
