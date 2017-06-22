@@ -51,6 +51,10 @@ classdef EEGStream < handle
         gamma_medianAll=[];
         gamma_meanAll=[];
         
+        % ASR
+        asr_state = struct;
+        artefactRemoval = 0;
+        
     end
     
     
@@ -314,21 +318,15 @@ classdef EEGStream < handle
                 %data(:,size(data,2)/2:size(data,2)) = [];
             end
             
-            
-            
-            
             % Artifact removal
-            if self.options.artifactRemoval
-                [coeff, score, latent] = pca(data');
-                threshold = 1e5;
-                %%% score(:,1:2) = 0;       % Remove to largest principal components
-                if any(latent > threshold)  % Remove components larger than threshold
-                    score(:,latent > threshold) = 0;
-                end
-                data = (score*coeff')';
+            if self.artefactRemoval
+                if isfield(self.asr_state, 'M')
+                    [data, self.asr_state] = asr_process(data, self.options.samplingRate, self.asr_state);
+                else
+                    fprintf('Load calibration data before applying ASR!\n');
+                end;
             end
-            
-            
+                
             % Optionally reref the data
             if self.options.reref
                 data = bsxfun(@minus, data, mean(data)); end

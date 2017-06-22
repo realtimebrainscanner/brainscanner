@@ -47,7 +47,15 @@ if ~exist('rescaling', 'file');
 
 if ~exist('lsl_loadlib','file')
     addpath(genpath('libraries/liblsl-Matlab')); end
-try
+
+if ~exist('asr_process','file')
+    addpath(genpath('libraries/BCILAB')); end
+
+if ~exist('asr_process','file')
+    addpath(genpath('libraries/BCILAB')); end
+
+try 
+
     lib = lsl_loadlib(env_translatepath('libraries/liblsl-Matlab:/bin'));
 catch
     lib = lsl_loadlib();
@@ -73,6 +81,13 @@ opts.standardize = 0;
 opts.bad_chans=[];%[5 21];
 
 
+% artifact removal
+opts.numSamplesCalibrationData = 60*opts.samplingRate;
+
+% plotting
+opts.numSamplesToPlot = 1000;
+opts.rangeChannelPlot = 100;
+
 % Model setup
 basis = load('model/basis_functions_24ch.mat','Qg');
 basisFunctions = basis.Qg;    % 569 basis functions uni-lateral
@@ -95,7 +110,7 @@ opts.verts = vertface.vert;
 opts.numChannels = 24-numel(opts.bad_chans);
 
 % prediction
-opts.print_predicted_label
+opts.print_predicted_label = 1;
 
 %opts.QG = basis.QG;
 
@@ -126,6 +141,7 @@ if strcmp(opts.recoveryMethod,'teVG');
 end
 opts.saveData = 0;
 opts.log = 0;
+opts.verbose = 1;
 opts.trainVG = 0;
 opts.numSamplesCalibrationVGData=20*opts.blockSize;
 handles.eeg = EEGStream(lib, opts, handles);
@@ -352,11 +368,13 @@ function togglebutton18_Callback(hObject, eventdata, handles)
 % hObject    handle to togglebutton18 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 if hObject.Value
     handles.text26.String = 'On';
 else
     handles.text26.String = 'Off';
 end
+
 handles.eeg.options.trainVG = hObject.Value;
 % Hint: get(hObject,'Value') returns toggle state of togglebutton18
 
@@ -375,6 +393,34 @@ else
 end
 handles.eeg.options.trainModel = hObject.Value;
 
-% Hint: get(hObject,'Value') returns toggle state of togglebutton19
 
 
+% --- Executes on button press in apply_asr_button.
+function apply_asr_button_Callback(hObject, eventdata, handles)
+% hObject    handle to apply_asr_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of apply_asr_button
+
+if hObject.Value
+    handles.text_asr.String = 'On';
+else
+    handles.text_asr.String = 'Off';
+end
+
+handles.eeg.artefactRemoval = hObject.Value;
+
+% --- Executes on button press in load_asr_button.
+function load_asr_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_asr_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of load_asr_button
+fprintf('Choose calibration data file:\n');
+[filename_data, PathName] = uigetfile('*.csv');
+fprintf('Loading data file %s\n',filename_data)
+calib_data = csvread([PathName,filename_data], 1, 0);%% columns 0
+calib_data = calib_data(:, 1:24);
+handles.eeg.asr_state = asr_calibrate(calib_data', handles.eeg.options.samplingRate);    
