@@ -418,23 +418,33 @@ calib_data = calib_data(:, 1:24);
 handles.eeg.asr_state = asr_calibrate(handles.eeg.preProcess(calib_data'), handles.eeg.options.samplingRate);    
 handles.text_viewer_asr_loaded.String = 'Loaded';
 
-% --- Executes on button press in togglebutton23.
-function togglebutton23_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton23 (see GCBO)
+% --- Executes on button press in button_filter_exp.
+function button_filter_exp_Callback(hObject, eventdata, handles)
+% hObject    handle to button_filter_exp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of togglebutton23
+% Hint: get(hObject,'Value') returns toggle state of button_filter_exp
+if hObject.Value
+    handles.text30.String = 'On';
+else
+    handles.text30.String = 'Off';
+end
 
 
-% --- Executes on button press in togglebutton24.
-function togglebutton24_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton24 (see GCBO)
+
+% --- Executes on button press in button_reref_exp.
+function button_reref_exp_Callback(hObject, eventdata, handles)
+% hObject    handle to button_reref_exp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of togglebutton24
-
+% Hint: get(hObject,'Value') returns toggle state of button_reref_exp
+if hObject.Value
+    handles.text31.String = 'On';
+else
+    handles.text31.String = 'Off';
+end
 
 % --- Executes on button press in togglebutton25.
 function togglebutton25_Callback(hObject, eventdata, handles)
@@ -445,19 +455,19 @@ function togglebutton25_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of togglebutton25
 
 
-% --- Executes on button press in togglebutton26.
-function togglebutton26_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton26 (see GCBO)
+% --- Executes on button press in button_asr_exp.
+function button_asr_exp_Callback(hObject, eventdata, handles)
+% hObject    handle to button_asr_exp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of togglebutton26
+% Hint: get(hObject,'Value') returns toggle state of button_asr_exp
 
 
-% --- Executes on button press in togglebutton27.
-function togglebutton27_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton27 (see GCBO)
+% --- Executes on button press in button_load_asr_exp.
+function button_load_asr_exp_Callback(hObject, eventdata, handles)
+% hObject    handle to button_load_asr_exp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of togglebutton27
+% Hint: get(hObject,'Value') returns toggle state of button_load_asr_exp
