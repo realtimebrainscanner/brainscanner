@@ -198,8 +198,17 @@ classdef EEGStream < handle
                     self.logEvents(eventData, logTimeStamps, toc(self.t0)); return;
                 end
                 
-                %% Pre-process
-                processedData = self.preProcess(rawData, timeStamps);
+                %% Pre-process               
+                processedData = preprocess(rawData, self.options);
+                
+                %% Artifact removal
+                if self.options.artefactRemoval
+                    if isfield(self.asr_state, 'M')
+                        [processedData, self.asr_state] = asr_process(processedData, self.options.samplingRate, self.asr_state);
+                    else
+                        fprintf('Load calibration data before applying ASR!\n');
+                    end;
+                end
                 
                 %% train VG
                  if self.options.trainVG
