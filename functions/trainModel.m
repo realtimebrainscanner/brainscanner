@@ -40,7 +40,15 @@ for idx_trial = 1:num_trials
     subject_data =  subject_data((EEGdelay*fs)+1:end, 1:num_channels);
     
     % how many samples do have labels for?
+    if isfield(options,'asr_state')
+    try
+    num_labelled_samples = length(stim_data.stim)*fs+ceil(1/uf*250);
+    catch
     num_labelled_samples = length(stim_data.stim)*fs;
+    end
+    else
+    num_labelled_samples = length(stim_data.stim)*fs;
+    end
     data{idx_trial} = subject_data(1:num_labelled_samples, 1:num_channels)';
     %data{idx_trial} = subject_data(:, 1:24)';
     
@@ -72,8 +80,14 @@ for idx_trial = 1:num_trials
 end;
 if isfield(options,'asr_state')
     [data_preprocessed{idx_trial} , out.asr_state] = asr_process(data_preprocessed{idx_trial} , fs, options.asr_state);
+    data_preprocessed{idx_trial}=data_preprocessed{idx_trial}(:,floor(0.25*fs):end);
+    no_win=floor(length(data_preprocessed{idx_trial})/wl);
+    stims{idx_trial}=stims{idx_trial}(1:no_win);
+else
+    no_win=floor(length(data_preprocessed{idx_trial})/wl);
 end
-
+    
+   % stims{idx_trial}=stims{idx_trial}(1:no_win);
 %%
 train_trial_idx = 1;
 %% Source localize
@@ -93,7 +107,7 @@ if run_source==1
         wl=1/uf*fs;
         disp('Training source localization parameter')
         opts.run_prune=1;opts.prune=1e-2;opts.pnorm = 1;opts.min_gamma=-100;
-        for d=1:floor(length(data_preprocessed{idx_trial})/wl)
+        for d=1:no_win;%floor(length(data_preprocessed{idx_trial})/wl)
             if ~rem(d,50)
                 fprintf('window %d out of %d windows\n',d,floor(length(data_preprocessed{idx_trial})/wl))
             end
@@ -113,7 +127,7 @@ if run_source==1
     opts.m0=zeros(569,1);
     for idx_trial = 1:num_trials
         fprintf('Calculating sources\n');
-        for d=1:floor(length(data_preprocessed{idx_trial})/wl);
+        for d=1:no_win;%floor(length(data_preprocessed{idx_trial})/wl);
             [sources,msources,~,~] = teVGGD(forwardModel,data_preprocessed{idx_trial}(:,(d-1)*wl+1:wl*d),gamma_median,opts);
             %AllS{idx_trial}(:,(d-1)*wl+1:wl*d)=basisFunctions'*sources;
             Sources{idx_trial}(:,(d-1)*wl+1:wl*d)=sources;
@@ -160,7 +174,7 @@ if run_source==1
     opts.m0=zeros(569,1);opts.m0(j(1:2),1)=1;
     for idx_trial = 1:num_trials
         fprintf('Calculating sources again\n');
-        for d=1:floor(length(data_preprocessed{idx_trial})/wl);
+        for d=1:no_win;%floor(length(data_preprocessed{idx_trial})/wl);
             [sources,msources,~,~] = teVGGD(forwardModel,data_preprocessed{idx_trial}(:,(d-1)*wl+1:wl*d),gamma_median,opts);
             %AllS{idx_trial}(:,(d-1)*wl+1:wl*d)=basisFunctions'*sources;
             Sources{idx_trial}(:,(d-1)*wl+1:wl*d)=sources;
@@ -203,7 +217,7 @@ for idx_trial = 1:num_trials
         % compute multitaper spectrogram
         params = struct('Fs', fs, 'tapers', [2, 9]); % timebandwidth product = 2, num tapers = 9
         movingwin = [1/uf, 1/uf]; % window size and window step
-        for d=1:floor(length(data{idx_trial})/wl);
+        for d=1:no_win;%floor(length(data_preprocessed{idx_trial})/wl);
             if sum(y{idx_trial }(idx_channel, (d-1)*wl+1:wl*d))==0
                 disp('zero y')
                 y{idx_trial}(idx_channel, (d-1)*wl+1:wl*d)=randn(size(y{idx_trial }(idx_channel, (d-1)*wl+1:wl*d)))*1e-16;
