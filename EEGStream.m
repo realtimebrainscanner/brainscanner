@@ -384,7 +384,8 @@ classdef EEGStream < handle
             if size(self.PredictData, 2) >= 128;
                 % we are done collecting data for prediction
                 tic
-            [predicted_stim,~]=applyModel(self,self.ClassificationModel,self.PredictData(:,end-127:end));
+            [predicted_stim, out]=applyModel(self,self.ClassificationModel,self.PredictData(:,end-127:end));
+            self.options.experiment.asr_state = out.asr_state;
                 toc
             self.predicted_stim=[self.predicted_stim, predicted_stim];PredictStim=self.predicted_stim;
             save PredictStim PredictStim

@@ -10,22 +10,24 @@ num_channels=24;
 %%
 
 % filter and rereference
-data_preprocessed =NaN(size(data));
+% data_preprocessed =NaN(size(data));
+% 
+% 
+% for idx_channel = 1:num_channels
+%     %if d==1;
+%     %   [data_pre,zf] = filter(filterB, filterA, [data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zeros(1,500)]);
+%     [data_preprocessed(idx_channel,:)] = filtfilt(out.options.filterB, out.options.filterA, [data(idx_channel,:)]);
+%     %else
+%     %  [data_preprocessed{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf] = filter(filterB, filterA, data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf);
+% end;
+% 
+% W=eye(num_channels)-1/num_channels;
+% data_preprocessed = W*data_preprocessed;
 
+data_preprocessed = preprocess(data, self.options.experiment);
 
-for idx_channel = 1:num_channels
-    %if d==1;
-    %   [data_pre,zf] = filter(filterB, filterA, [data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zeros(1,500)]);
-    [data_preprocessed(idx_channel,:)] = filtfilt(out.options.filterB, out.options.filterA, [data(idx_channel,:)]);
-    %else
-    %  [data_preprocessed{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf] = filter(filterB, filterA, data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf);
-end;
-
-W=eye(num_channels)-1/num_channels;
-data_preprocessed = W*data_preprocessed;
-
-if isfield(out,'asr_state')
-    [data_preprocessed , out.asr_state] = asr_process(data_preprocessed, fs, out.asr_state);
+if isfield(self.options.experiment,'asr_state')
+    [data_preprocessed , out.asr_state] = asr_process(data_preprocessed, fs, self.options.experiment.asr_state);
 end
 %% Source localize
 if run_source==1
