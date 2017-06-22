@@ -331,12 +331,7 @@ classdef EEGStream < handle
             if self.options.reref
                 data = bsxfun(@minus, data, mean(data)); end
             
-            % Optionally zeromean or standardize data
-            % Is this post-processing??
-            if self.options.zeromean
-                data = bsxfun(@minus, data, mean(data, 2)); end
-            if self.options.standardize
-                data = bsxfun(@times, data, 1./std(data, [], 2)); end
+
             
             processedData = data;
               

@@ -75,10 +75,15 @@ opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 [opts.filterB, opts.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
 opts.artifactRemoval = 0;
 opts.filter = 0;
-opts.zeromean = 0;
 opts.reref = 0;
-opts.standardize = 0;
 opts.bad_chans=[];%[5 21];
+
+% Options for experiment
+[opts_exp.filterB, opts_exp.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
+opts_exp.artifactRemoval = 0;
+opts_exp.filter = 0;
+opts_exp.reref = 0;
+opts_exp.bad_chans=[];%[5 21];
 
 
 % artifact removal
@@ -348,21 +353,6 @@ handles.eeg.options.saveData = hObject.Value;
 handles.eeg.options.log = hObject.Value;
 
 
-% --- Executes on button press in togglebutton17.
-function togglebutton17_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton17 (see GCBO)
-
-if hObject.Value
-    handles.text25.String = 'On';
-else
-    handles.text25.String = 'Off';
-end
-% runExperiment(handles);
-handles.eeg.options.saveData = hObject.Value;
-handles.eeg.options.log = hObject.Value;
-handles.eeg.showExperiment = hObject.Value;
-
-
 % --- Executes on button press in togglebutton18.
 function togglebutton18_Callback(hObject, eventdata, handles)
 % hObject    handle to togglebutton18 (see GCBO)
@@ -424,3 +414,39 @@ fprintf('Loading data file %s\n',filename_data)
 calib_data = csvread([PathName,filename_data], 1, 0);%% columns 0
 calib_data = calib_data(:, 1:24);
 handles.eeg.asr_state = asr_calibrate(calib_data', handles.eeg.options.samplingRate);    
+
+
+% --- Executes on button press in togglebutton23.
+function togglebutton23_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton23 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton23
+
+
+% --- Executes on button press in togglebutton24.
+function togglebutton24_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton24 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton24
+
+
+% --- Executes on button press in togglebutton25.
+function togglebutton25_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton25 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton25
+
+
+% --- Executes on button press in togglebutton26.
+function togglebutton26_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton26 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton26
