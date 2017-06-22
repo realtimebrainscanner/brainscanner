@@ -70,6 +70,10 @@ for idx_trial = 1:num_trials
     W=eye(num_channels)-1/num_channels;
     data_preprocessed{idx_trial} = W*data_preprocessed{idx_trial};
 end;
+if isfield(options,'asr_state')
+    [data_preprocessed{idx_trial} , out.asr_state] = asr_process(data_preprocessed{idx_trial} , fs, options.asr_state);
+end
+
 %%
 train_trial_idx = 1;
 %% Source localize

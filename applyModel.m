@@ -24,7 +24,9 @@ end;
 W=eye(num_channels)-1/num_channels;
 data_preprocessed = W*data_preprocessed;
 
-
+if isfield(out,'asr_state')
+    [data_preprocessed , out.asr_state] = asr_process(data_preprocessed, fs, out.asr_state);
+end
 %% Source localize
 if run_source==1
     opts.bad_chans=[];
