@@ -71,23 +71,25 @@ opts.samplingRate = 250;
 opts.blockSize = 32;
 opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 
-% Pre processing
+% Pre processing for viewer
 [opts.filterB, opts.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
-opts.artifactRemoval = 0;
+opts.artefactRemoval = 0;
 opts.filter = 0;
 opts.reref = 0;
 opts.bad_chans=[];%[5 21];
 
+
+
 % Options for experiment
-[opts_exp.filterB, opts_exp.filterA] = butter(4,[1 45]/(opts.samplingRate/2));
-opts_exp.artifactRemoval = 0;
+[opts_exp.filterB, opts_exp.filterA] = butter(4,[5 15]/(opts.samplingRate/2));
+opts_exp.artefactRemoval = 0;
 opts_exp.filter = 0;
 opts_exp.reref = 0;
 opts_exp.bad_chans=[];%[5 21];
 
 
 % artifact removal
-opts.numSamplesCalibrationData = 60*opts.samplingRate;
+opts.artefactRemoval = 0;
 
 % plotting
 opts.numSamplesToPlot = 1000;
@@ -399,7 +401,7 @@ else
     handles.text_asr.String = 'Off';
 end
 
-handles.eeg.artefactRemoval = hObject.Value;
+handles.eeg.options.artefactRemoval = hObject.Value;
 
 % --- Executes on button press in load_asr_button.
 function load_asr_button_Callback(hObject, eventdata, handles)
@@ -413,8 +415,8 @@ fprintf('Choose calibration data file:\n');
 fprintf('Loading data file %s\n',filename_data)
 calib_data = csvread([PathName,filename_data], 1, 0);%% columns 0
 calib_data = calib_data(:, 1:24);
-handles.eeg.asr_state = asr_calibrate(calib_data', handles.eeg.options.samplingRate);    
-
+handles.eeg.asr_state = asr_calibrate(handles.eeg.preProcess(calib_data'), handles.eeg.options.samplingRate);    
+handles.text_viewer_asr_loaded.String = 'Loaded';
 
 % --- Executes on button press in togglebutton23.
 function togglebutton23_Callback(hObject, eventdata, handles)
@@ -450,3 +452,12 @@ function togglebutton26_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of togglebutton26
+
+
+% --- Executes on button press in togglebutton27.
+function togglebutton27_Callback(hObject, eventdata, handles)
+% hObject    handle to togglebutton27 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of togglebutton27

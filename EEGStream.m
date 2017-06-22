@@ -53,8 +53,7 @@ classdef EEGStream < handle
         
         % ASR
         asr_state = struct;
-        artefactRemoval = 0;
-        
+                   
     end
     
     
@@ -319,7 +318,7 @@ classdef EEGStream < handle
             end
             
             % Artifact removal
-            if self.artefactRemoval
+            if self.options.artefactRemoval
                 if isfield(self.asr_state, 'M')
                     [data, self.asr_state] = asr_process(data, self.options.samplingRate, self.asr_state);
                 else
