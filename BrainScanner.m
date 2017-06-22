@@ -86,6 +86,7 @@ opts_exp.artefactRemoval = 0;
 opts_exp.filter = 0;
 opts_exp.reref = 0;
 opts_exp.bad_chans=[];%[5 21];
+opts.experiment = opts_exp;
 
 
 % artifact removal
@@ -151,7 +152,9 @@ opts.log = 0;
 opts.verbose = 1;
 opts.trainVG = 0;
 opts.numSamplesCalibrationVGData=20*opts.blockSize;
+
 handles.eeg = EEGStream(lib, opts, handles);
+
 
 
 initialize_gui(hObject, handles, false);
@@ -377,9 +380,11 @@ function togglebutton19_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if hObject.Value
     handles.text27.String = 'On';
-    [options.filterB, options.filterA] = butter(4,[5 15]/(handles.eeg.options.samplingRate/2));
-    options.samplingRate=handles.eeg.options.samplingRate;
-    handles.eeg.ClassificationModel=trainModel(options);
+    %[options.filterB, options.filterA] = butter(4,[5 15]/(handles.eeg.options.samplingRate/2));
+    %options.samplingRate=handles.eeg.options.samplingRate;
+    
+  
+    handles.eeg.ClassificationModel=trainModel(handles.eeg.options);
 else
     handles.text27.String = 'Off';
 end
@@ -415,7 +420,7 @@ fprintf('Choose calibration data file:\n');
 fprintf('Loading data file %s\n',filename_data)
 calib_data = csvread([PathName,filename_data], 1, 0);%% columns 0
 calib_data = calib_data(:, 1:24);
-handles.eeg.asr_state = asr_calibrate(handles.eeg.preProcess(calib_data'), handles.eeg.options.samplingRate);    
+handles.eeg.asr_state = asr_calibrate(preprocess(calib_data', handles.eeg.options), handles.eeg.options.samplingRate);    
 handles.text_viewer_asr_loaded.String = 'Loaded';
 
 % --- Executes on button press in button_filter_exp.
@@ -431,6 +436,7 @@ else
     handles.text30.String = 'Off';
 end
 
+handles.eeg.options.experiment.filter = hObject.Value;
 
 
 % --- Executes on button press in button_reref_exp.
@@ -445,6 +451,7 @@ if hObject.Value
 else
     handles.text31.String = 'Off';
 end
+handles.eeg.options.experiment.reref = hObject.Value;
 
 % --- Executes on button press in togglebutton25.
 function togglebutton25_Callback(hObject, eventdata, handles)
@@ -463,6 +470,13 @@ function button_asr_exp_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of button_asr_exp
 
+if hObject.Value
+    handles.text33.String = 'On';
+else
+    handles.text33.String = 'Off';
+end
+
+handles.eeg.options.experiment.artefactRemoval = hObject.Value;
 
 % --- Executes on button press in button_load_asr_exp.
 function button_load_asr_exp_Callback(hObject, eventdata, handles)
@@ -471,3 +485,11 @@ function button_load_asr_exp_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of button_load_asr_exp
+fprintf('Choose calibration data file:\n');
+[filename_data, PathName] = uigetfile('*.csv');
+fprintf('Loading data file %s\n',filename_data)
+calib_data = csvread([PathName,filename_data], 1, 0);%% columns 0
+calib_data = calib_data(:, 1:24);
+handles.eeg.options.experiment.asr_state = asr_calibrate(preprocess(calib_data', handles.eeg.options), handles.eeg.options.samplingRate);    
+
+handles.text35.String = 'Loaded';

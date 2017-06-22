@@ -301,49 +301,7 @@ classdef EEGStream < handle
         
         %% Data
         
-        % Preprocess data; filtering, rereference and what not
-        function processedData = preProcess(self, data, timeStamps)
-            %zeroPadding = zeros(size(data));
-            %data = [data zeroPadding];
-            % Remove bad channels
-            if ~isempty(self.options.bad_chans)
-                self.options.Channames=self.options.channames;
-                self.options.Channames(self.options.bad_chans)=[];
-                data(self.options.bad_chans,:)=[];
-            end
-            
-            if self.options.filter
-                for i=1:self.numChannels
-                    %if ~isfield(self.options,'filterF');
-                    %data(i,:)=data(i,:).*hann(length(data(i,:)));
-                    %[data(i,:), zf(i,:)] = filter(self.options.filterB, self.options.filterA, data(i,:));
-                [data(i,:)] = filtfilt(self.options.filterB, self.options.filterA, data(i,:));
-                  %  else
 
-                  %  [data(i,:), zf(i,:)] = filter(self.options.filterB, self.options.filterA, data(i,:),self.options.filterF(i,:));
-                  %  end
-                end
-                %data(:,size(data,2)/2:size(data,2)) = [];
-            end
-            
-            % Artifact removal
-            if self.options.artefactRemoval
-                if isfield(self.asr_state, 'M')
-                    [data, self.asr_state] = asr_process(data, self.options.samplingRate, self.asr_state);
-                else
-                    fprintf('Load calibration data before applying ASR!\n');
-                end;
-            end
-                
-            % Optionally reref the data
-            if self.options.reref
-                data = bsxfun(@minus, data, mean(data)); end
-            
-
-            
-            processedData = data;
-              
-        end
         
 
         

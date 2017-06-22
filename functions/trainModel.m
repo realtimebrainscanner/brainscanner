@@ -51,28 +51,49 @@ end;
 %% Preprocess
 
 % filter and rereference
-data_preprocessed = cell(num_trials, 1);
+% data_preprocessed = cell(num_trials, 1);
+% 
+% wl=1/uf*fs;
+% for idx_trial = 1:num_trials
+%     for idx_channel = 1:num_channels
+%         for d=1:floor(length(data{idx_trial})/wl);
+%             %if d==1;
+%             %   [data_pre,zf] = filter(filterB, filterA, [data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zeros(1,500)]);
+%             [data_preprocessed{idx_trial}(idx_channel,(d-1)*wl+1:wl*d)] = filtfilt(options.experiment.filterB,options.experiment.filterA, [data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d)]);
+%             %else
+%             %  [data_preprocessed{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf] = filter(filterB, filterA, data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf);
+%             %end
+%         end
+%     end
+% end;
+% for idx_trial = 1:num_trials
+%     W=eye(num_channels)-1/num_channels;
+%     data_preprocessed{idx_trial} = W*data_preprocessed{idx_trial};
+% end;
+% if isfield(options,'asr_state')
+%     [data_preprocessed{idx_trial} , out.asr_state] = asr_process(data_preprocessed{idx_trial} , fs, options.asr_state);
+% end
+
+%% Apply preprocessing block-wise
 
 wl=1/uf*fs;
-for idx_trial = 1:num_trials
-    for idx_channel = 1:num_channels
-        for d=1:floor(length(data{idx_trial})/wl);
-            %if d==1;
-            %   [data_pre,zf] = filter(filterB, filterA, [data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zeros(1,500)]);
-            [data_preprocessed{idx_trial}(idx_channel,(d-1)*wl+1:wl*d)] = filtfilt(options.filterB,options.filterA, [data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d)]);
-            %else
-            %  [data_preprocessed{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf] = filter(filterB, filterA, data{idx_trial}(idx_channel,(d-1)*wl+1:wl*d),zf);
-            %end
-        end
-    end
-end;
-for idx_trial = 1:num_trials
-    W=eye(num_channels)-1/num_channels;
-    data_preprocessed{idx_trial} = W*data_preprocessed{idx_trial};
-end;
-if isfield(options,'asr_state')
-    [data_preprocessed{idx_trial} , out.asr_state] = asr_process(data_preprocessed{idx_trial} , fs, options.asr_state);
+data_preprocessed = zeros(size(data{idx_trial}));
+for d=1:floor(length(data{1})/wl)
+    [data_preprocessed(:,(d-1)*wl+1:wl*d)] = preprocess(data{idx_trial}(:,(d-1)*wl+1:wl*d), options.experiment);
 end
+
+%% Artifact removal
+if options.experiment.artefactRemoval
+    if isfield(options.experiment, 'asr_state')
+        fprintf('ASR!!!\n')
+        [data_preprocessed, out.asr_state] = asr_process(data_preprocessed , fs, options.experiment.asr_state);
+    else
+        fprintf('trainModel: Load calibration data before applying ASR!\n');
+    end;
+end;
+
+%% Keep structure
+data_preprocessed = {data_preprocessed};
 
 %%
 train_trial_idx = 1;
