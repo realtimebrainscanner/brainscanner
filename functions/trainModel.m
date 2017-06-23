@@ -39,9 +39,21 @@ for idx_trial = 1:num_trials
     EEGdelay = input(prompt);
     subject_data =  subject_data((EEGdelay*fs)+1:end, 1:num_channels);
     
-    % how many samples do have labels for?
-    num_labelled_samples = length(stim_data.stim)*fs;
+        % how many samples do have labels for?
+    if isfield(options.experiment,'asr_state')
+        try
+            num_labelled_samples = length(stim_data.stim)*fs+ceil(1/uf*250);
+        catch
+            num_labelled_samples = length(stim_data.stim)*fs;
+        end
+        else
+        num_labelled_samples = length(stim_data.stim)*fs;
+    end
     data{idx_trial} = subject_data(1:num_labelled_samples, 1:num_channels)';
+    
+    % how many samples do have labels for?
+%     num_labelled_samples = length(stim_data.stim)*fs;
+%     data{idx_trial} = subject_data(1:num_labelled_samples, 1:num_channels)';
     %data{idx_trial} = subject_data(:, 1:24)';
     
     %fprintf('done.\n\n');
@@ -85,15 +97,25 @@ end
 %% Artifact removal
 if options.experiment.artefactRemoval
     if isfield(options.experiment, 'asr_state')
-        fprintf('ASR!!!\n')
         [data_preprocessed, out.asr_state] = asr_process(data_preprocessed , fs, options.experiment.asr_state);
     else
         fprintf('trainModel: Load calibration data before applying ASR!\n');
     end;
 end;
 
+
+if isfield(options.experiment,'asr_state')
+    [data_preprocessed , out.asr_state] = asr_process(data_preprocessed , fs, options.experiment.asr_state);
+    data_preprocessed=data_preprocessed(:,floor(0.25*fs):end);
+    no_win=floor(length(data_preprocessed)/wl);
+    stims{idx_trial}=stims{idx_trial}(1:no_win);
+else
+    no_win=floor(length(data_preprocessed)/wl);
+end
 %% Keep structure
 data_preprocessed = {data_preprocessed};
+
+
 
 %%
 train_trial_idx = 1;
@@ -224,7 +246,7 @@ for idx_trial = 1:num_trials
         % compute multitaper spectrogram
         params = struct('Fs', fs, 'tapers', [2, 9]); % timebandwidth product = 2, num tapers = 9
         movingwin = [1/uf, 1/uf]; % window size and window step
-        for d=1:floor(length(data{idx_trial})/wl);
+        for d=1:no_win
             if sum(y{idx_trial }(idx_channel, (d-1)*wl+1:wl*d))==0
                 disp('zero y')
                 y{idx_trial}(idx_channel, (d-1)*wl+1:wl*d)=randn(size(y{idx_trial }(idx_channel, (d-1)*wl+1:wl*d)))*1e-16;
