@@ -100,6 +100,16 @@ classdef EEGStream < handle
         % Starting timer and pulling data
         function start(self)
             self.setup();
+               if self.isConnected
+                    % Read data - either from device or use cached block
+                    excessFlag = 0;
+                    try [~, ~] = self.readDataFromDevice(excessFlag);
+                    catch
+                        disp('Unknown error');
+                    end;
+               end
+            self.excessData = []; self.excessTime = []; self.excessBlockSize = 0;
+            
             blockSampleRate = 1/((1/250) * self.options.blockSize); % Maybe a bit more often?
             self.pullInterval = 1/blockSampleRate;
             self.functionTimer = timer('TimerFcn',{@self.processData},'Period', self.pullInterval, 'ExecutionMode', 'fixedRate');
@@ -194,7 +204,8 @@ classdef EEGStream < handle
                 % Make sure the correct number of samples are being processed
                 try
                     [rawData, timeStamps] = self.chunkSizeCorrection(rawData, timeStamps);
-                catch
+                catch ME
+                    disp(ME.identifier)
                     self.logEvents(eventData, logTimeStamps, toc(self.t0)); return;
                 end
                 
@@ -246,14 +257,17 @@ classdef EEGStream < handle
                 experimentData = [num2cell(NaN(size(timeStamps,2)-1,3)); experimentData];
                 %                 experimentData = [NaN(size(timeStamps,2)-1,3); experimentData];
                 self.saveData(rawData, timeStamps, experimentData);
-                self.logEvents(eventData, logTimeStamps, toc(self.t0));
+                self.logEvents(eventData, timeStamps, toc(self.t0));
                 
                 % Prepare for next sample and clean up
                 self.lastSampleTimeStamp = timeStamps(end);
                 
                 
                 % Check for full block excess data and process immediately
-                if self.excessBlockSize == self.options.blockSize
+                if self.excessBlockSize >= self.options.blockSize
+                    if self.excessBlockSize> self.options.samplingRate
+                        fprintf('Excess data is %3.2f s\n',self.excessBlockSize/self.options.samplingRate);
+                    end
                     self.processData(varargin{:}, 'excess');
                 end
             catch exception
@@ -478,7 +492,6 @@ classdef EEGStream < handle
             currentBlockSize = numel(timeStamps);
             
             if isempty(timeStamps) % Return if no data was ready to sample
-                disp('No data');
                 throw(MException('input:noData','No data'));
             end
             
