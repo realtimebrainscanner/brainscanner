@@ -51,8 +51,8 @@ if ~exist('lsl_loadlib','file')
 if ~exist('asr_process','file')
     addpath(genpath('libraries/BCILAB')); end
 
-if ~exist('asr_process','file')
-    addpath(genpath('libraries/BCILAB')); end
+if ~exist('mtspecgramc','file')
+    addpath(genpath('libraries/chronux_2_11')); end
 
 try 
 
