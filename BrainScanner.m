@@ -78,8 +78,6 @@ opts.filter = 0;
 opts.reref = 0;
 opts.bad_chans=[];%[5 21];
 
-
-
 % Options for experiment
 [opts_exp.filterB, opts_exp.filterA] = butter(4,[5 15]/(opts.samplingRate/2));
 opts_exp.artefactRemoval = 0;
@@ -145,7 +143,14 @@ opts.print_predicted_label = 1;
 % Other
 opts.recoveryMethod = 'teVG';%'MARD';
 if strcmp(opts.recoveryMethod,'teVG');
-    opts.gamma=-75;
+    try 
+        load('gamma.mat', 'gmedian');
+        opts.gamma = nanmedian(gmedian);
+        fprintf('Loaded gamma value = %3.2f from file gamma.mat\n', opts.gamma);
+    catch
+        opts.gamma=-75;
+        fprintf('File gamma.mat not found. Using default value for gamma = %3.2f.\n', opts.gamma);
+    end;
 end
 opts.saveData = 0;
 opts.log = 0;
