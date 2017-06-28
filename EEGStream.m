@@ -100,27 +100,30 @@ classdef EEGStream < handle
         % Starting timer and pulling data
         function start(self)
             self.setup();
-               if self.isConnected
-                    % Read data - either from device or use cached block
-                    excessFlag = 0;
-                    try [~, ~] = self.readDataFromDevice(excessFlag);
-                    catch
-                        disp('Unknown error');
-                    end;
-               end
-            self.excessData = []; self.excessTime = []; self.excessBlockSize = 0;
             
+           % make sure to empty the buffer in labstreaminglayer before
+           % starting the timer
+            if self.isConnected
+                % Read and discard any data avaiable in the buffer
+                try [~, ~] = self.readDataFromDevice(0);
+                catch
+                    disp('Unknown error');
+                end;
+            end
+            
+            % delete old data
+            self.excessData = []; self.excessTime = []; self.excessBlockSize = 0;
+            self.PredictData=[]; self.predicted_stim=[];
+            
+            % compute timer interval
             blockSampleRate = 1/((1/250) * self.options.blockSize); % Maybe a bit more often?
             self.pullInterval = 1/blockSampleRate;
+            
+            % create & start timer to invoke the function processData()
+            % with a fixed interval
             self.functionTimer = timer('TimerFcn',{@self.processData},'Period', self.pullInterval, 'ExecutionMode', 'fixedRate');
-            
-            self.showChannels = [9 10];
-            
             start(self.functionTimer);
-            self.PredictData=[];
-            self.predicted_stim=[];
                
-            
         end
         
         % Stop timer and clean up
@@ -159,33 +162,32 @@ classdef EEGStream < handle
             self.programHandle.togglebutton10.Value = self.showData;
             self.programHandle.togglebutton11.Value = self.showBrain;
             self.programHandle.togglebutton14.Value = self.showTiming;
-            %             self.programHandle.togglebutton1.Value = self.functionTimer.Running;
         end
         
         
-        % Updating function (every 64 samples)
+        % Updating function (every 32 samples)
         function processData(self, varargin)
             try
                 % Loop processing time
                 self.t0 = tic;
                 
-                
                 experimentData = num2cell(NaN(1,3)); % Create variable for saving experiment event
                 
-                if self.showExperiment && self.isConnected
-                    if isempty(self.experimentEventIntervals)
-                        self.loadExperiment(); end;
-                    
-                    waitingTime = round(self.experimentEventIntervals(1)/self.pullInterval);
-                    %                     runningTime = floor(self.functionTimer.TasksExecuted*self.pullInterval);
-                    if mod(self.functionTimer.TasksExecuted, waitingTime) == 0
-                        experimentData{1} = self.experimentEventNames{1};
-                        experimentData{2} = self.experimentEventFiles{1};
-                        experimentData{3} = self.experimentEventIntervals(1);
-                        self.experiment();
-                    end
-                end
+%                 if self.showExperiment && self.isConnected
+%                     if isempty(self.experimentEventIntervals)
+%                         self.loadExperiment(); end;
+%                     
+%                     waitingTime = round(self.experimentEventIntervals(1)/self.pullInterval);
+%                     %                     runningTime = floor(self.functionTimer.TasksExecuted*self.pullInterval);
+%                     if mod(self.functionTimer.TasksExecuted, waitingTime) == 0
+%                         experimentData{1} = self.experimentEventNames{1};
+%                         experimentData{2} = self.experimentEventFiles{1};
+%                         experimentData{3} = self.experimentEventIntervals(1);
+%                         self.experiment();
+%                     end
+%                 end
                 
+                %% Read data
                 if self.isConnected
                     % Read data - either from device or use cached block
                     try excessFlag = varargin{3}; catch; excessFlag = 0; end
@@ -201,7 +203,7 @@ classdef EEGStream < handle
                 eventData = rawData;
                 logTimeStamps = timeStamps;
                 
-                % Make sure the correct number of samples are being processed
+                %% Make sure the correct number of samples are being processed
                 try
                     [rawData, timeStamps] = self.chunkSizeCorrection(rawData, timeStamps);
                 catch ME
@@ -209,10 +211,10 @@ classdef EEGStream < handle
                     self.logEvents(eventData, logTimeStamps, toc(self.t0)); return;
                 end
                 
-                %% Pre-process               
+                %% Pre-process       
                 processedData = preprocess(rawData, self.options);
                 
-                %% Artifact removal
+                %% Artifact removal using the Artifact Subspace Reconstruct (ASR) method
                 if self.options.artefactRemoval
                     if isfield(self.asr_state, 'M')
                         [processedData, self.asr_state] = asr_process(processedData, self.options.samplingRate, self.asr_state);
@@ -221,24 +223,18 @@ classdef EEGStream < handle
                     end;
                 end
                 
-                %% train VG
+                %% train VG for source localization
                  if self.options.trainVG
                     [gamma_mean,gamma_median]=self.trainVG(processedData);
                  end
-                %% train Model
-                %% Feature extraction
-                % featureData = self.featureExtraction(processedData, timeStamps);
+                
                 
                 %% Various data visualization
-                %             self.plotFrequencySpectrum(processedData);
                 if self.showData
                     self.plotData(processedData); end
                 
                 if self.showTiming
                     self.plotTiming(timeStamps); end
-                
-                %             self.plotResults(sources);
-                %                 self.plotAllChannels(rawData);
                 
                 %% Perform source localization
                 if self.showBrain
@@ -247,23 +243,19 @@ classdef EEGStream < handle
                 end
                 
                 %% Post-process
-                % ?
-                if isfield(self.ClassificationModel,'model');
-                self.classify(rawData);
+                if isfield(self.ClassificationModel,'model')
+                    self.classify(rawData);
                 end
                 
-                
-                % Collect data and log
+                %% Collect data and log
                 experimentData = [num2cell(NaN(size(timeStamps,2)-1,3)); experimentData];
-                %                 experimentData = [NaN(size(timeStamps,2)-1,3); experimentData];
                 self.saveData(rawData, timeStamps, experimentData);
                 self.logEvents(eventData, timeStamps, toc(self.t0));
                 
                 % Prepare for next sample and clean up
                 self.lastSampleTimeStamp = timeStamps(end);
                 
-                
-                % Check for full block excess data and process immediately
+                %% Check for excess data and process immediately
                 if self.excessBlockSize >= self.options.blockSize
                     if self.excessBlockSize> self.options.samplingRate
                         fprintf('Excess data is %3.2f s\n',self.excessBlockSize/self.options.samplingRate);
@@ -280,68 +272,64 @@ classdef EEGStream < handle
         
         
         %% Experimenting
-        function loadExperiment(self)
-            self.experimentEvents = {};
-            self.experimentEventNames = {'open eyes', 'close eyes', 'open eyes', 'close eyes'};
-            self.experimentEventFiles = {'open.wav', 'close.wav','open.wav','close.wav'};
-            self.experimentEventIntervals = [4 4 4 4];
-            
-            for i=1:4
-                self.experimentEvents{i} = @self.openEyeCloseEyeExperiment;
-            end
-        end
+%         function loadExperiment(self)
+%             self.experimentEvents = {};
+%             self.experimentEventNames = {'open eyes', 'close eyes', 'open eyes', 'close eyes'};
+%             self.experimentEventFiles = {'open.wav', 'close.wav','open.wav','close.wav'};
+%             self.experimentEventIntervals = [4 4 4 4];
+%             
+%             for i=1:4
+%                 self.experimentEvents{i} = @self.openEyeCloseEyeExperiment;
+%             end
+%         end
         
-        function experiment(self)
-            try
-                event = self.experimentEvents{1};
-                file = self.experimentEventFiles{1};
-                self.experimentEvents(1) = [];
-                self.experimentEventNames(1) = [];
-                self.experimentEventFiles(1) = [];
-                self.experimentEventIntervals(1) = [];
-                event(file);
-            catch e
-                %                 disp(e);
-            end;
-        end
+%         function experiment(self)
+%             try
+%                 event = self.experimentEvents{1};
+%                 file = self.experimentEventFiles{1};
+%                 self.experimentEvents(1) = [];
+%                 self.experimentEventNames(1) = [];
+%                 self.experimentEventFiles(1) = [];
+%                 self.experimentEventIntervals(1) = [];
+%                 event(file);
+%             catch e
+%                 %                 disp(e);
+%             end;
+%         end
         
-        function openEyeCloseEyeExperiment(self, file)
-            event = audioread(file);
-            %             tic
-            soundsc(event,8196,16);
-            %             toc
-        end
-        
+%         function openEyeCloseEyeExperiment(self, file)
+%             event = audioread(file);
+%             %             tic
+%             soundsc(event,8196,16);
+%             %             toc
+%         end
+%         
         
         %% Data
         
-
-        
-
-        
-        function [featureData, freq] = featureExtraction(self, data, timeStamps)
-            Fs = self.options.samplingRate;
-            
-            %             [pxx, f] = pwelch(data');
-            %             freq = 0:Fs/(2*size(f,1)-1):Fs/2;
-            %             featureData = 10*log10(pxx');
-            
-            winSize = size(data,2);
-            X = fft(data',winSize)';
-            X = 20*log10(abs(X)/size(X,2));
-            X = X(:,1:size(X,2)/2+1);
-            
-            freq = 0:Fs/(2*size(X,2)-1):Fs/2;
-            featureData = X;
-            
-            %             nfft = 2^nextpow2(size(data,2));
-            %             [Pxx] = abs(fft(data',nfft)).^2/size(data,2)/Fs;
-            %             % Create a single-sided spectrum
-            %             Hpsd = dspdata.psd(Pxx(1:size(Pxx,2)/2,:),'Fs',Fs);
-            % %             plot(Hpsd);
-            %             freq = Hpsd.Frequencies;
-            %             featureData = 20*log10(Hpsd.data');
-        end
+%         function [featureData, freq] = featureExtraction(self, data, timeStamps)
+%             Fs = self.options.samplingRate;
+%             
+%             %             [pxx, f] = pwelch(data');
+%             %             freq = 0:Fs/(2*size(f,1)-1):Fs/2;
+%             %             featureData = 10*log10(pxx');
+%             
+%             winSize = size(data,2);
+%             X = fft(data',winSize)';
+%             X = 20*log10(abs(X)/size(X,2));
+%             X = X(:,1:size(X,2)/2+1);
+%             
+%             freq = 0:Fs/(2*size(X,2)-1):Fs/2;
+%             featureData = X;
+%             
+%             %             nfft = 2^nextpow2(size(data,2));
+%             %             [Pxx] = abs(fft(data',nfft)).^2/size(data,2)/Fs;
+%             %             % Create a single-sided spectrum
+%             %             Hpsd = dspdata.psd(Pxx(1:size(Pxx,2)/2,:),'Fs',Fs);
+%             % %             plot(Hpsd);
+%             %             freq = Hpsd.Frequencies;
+%             %             featureData = 20*log10(Hpsd.data');
+%         end
         
         % Localize sources
         function sources = sourceLocalization(self, data)
@@ -391,16 +379,15 @@ classdef EEGStream < handle
                 save gamma gmedian gmean
             end
         end
+        
         function classify(self, data)
-            
+           
             % collect samples
             self.PredictData = [self.PredictData data];
-            if size(self.PredictData, 2) >= 128;
+            if size(self.PredictData, 2) >= 128
                 % we are done collecting data for prediction
-                tic
             [predicted_stim, out]=applyModel(self,self.ClassificationModel,self.PredictData(:,end-127:end));
             self.options.experiment.asr_state = out.asr_state;
-                toc
             self.predicted_stim=[self.predicted_stim, predicted_stim];PredictStim=self.predicted_stim;
             save PredictStim PredictStim
             self.PredictData = [];
@@ -662,35 +649,35 @@ classdef EEGStream < handle
             %             title(self.TimeAxis,titleString);
         end
         
-        function plotAllChannels(self, data)
-            if isempty(self.ChannelsFigure) || ~isvalid(self.ChannelsFigure)
-                self.setupChannelsFigure(); end;
-            
-            if ~min([ismember(self.showChannels, self.currentShowingChannels) ismember(self.currentShowingChannels, self.showChannels)])
-                self.setupChannelsFigure(); end;
-            
-            signal = [self.previousSignal data];
-            displaySize = 512; %256;
-            toRemove = max(size(signal,2), displaySize)-displaySize;
-            if toRemove
-                signal(:,1:toRemove) = []; end
-            
-            processedData = self.preProcess(signal, []);
-            [featureData, freq] = self.featureExtraction(processedData, []);
-            
-            subPlots = get(self.ChannelsFigure,'children');
-            for i=1:numel(self.showChannels)
-                channel = self.showChannels(i);
-                % Raw signal
-                %                 set(get(subPlots(i), 'children'), 'YData', signal(channel,:), 'XData', 1:numel(signal(channel,:)));
-                % Freq
-                set(get(subPlots(i), 'children'), 'YData', featureData(channel,1:end), 'XData', freq(1:end));
-            end
-            self.previousSignal = signal;
-            
-            
-        end
-        
+%         function plotAllChannels(self, data)
+%             if isempty(self.ChannelsFigure) || ~isvalid(self.ChannelsFigure)
+%                 self.setupChannelsFigure(); end;
+%             
+%             if ~min([ismember(self.showChannels, self.currentShowingChannels) ismember(self.currentShowingChannels, self.showChannels)])
+%                 self.setupChannelsFigure(); end;
+%             
+%             signal = [self.previousSignal data];
+%             displaySize = 512; %256;
+%             toRemove = max(size(signal,2), displaySize)-displaySize;
+%             if toRemove
+%                 signal(:,1:toRemove) = []; end
+%             
+%             processedData = self.preProcess(signal, []);
+%             [featureData, freq] = self.featureExtraction(processedData, []);
+%             
+%             subPlots = get(self.ChannelsFigure,'children');
+%             for i=1:numel(self.showChannels)
+%                 channel = self.showChannels(i);
+%                 % Raw signal
+%                 %                 set(get(subPlots(i), 'children'), 'YData', signal(channel,:), 'XData', 1:numel(signal(channel,:)));
+%                 % Freq
+%                 set(get(subPlots(i), 'children'), 'YData', featureData(channel,1:end), 'XData', freq(1:end));
+%             end
+%             self.previousSignal = signal;
+%             
+%             
+%         end
+%         
         
         % Setup figures
         function setupBrainFigure(self)
