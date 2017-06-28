@@ -145,7 +145,7 @@ opts.print_predicted_label = 1;
 % Other
 opts.recoveryMethod = 'teVG';%'MARD';
 if strcmp(opts.recoveryMethod,'teVG');
-    opts.gamma=-100;
+    opts.gamma=-75;
 end
 opts.saveData = 0;
 opts.log = 0;
