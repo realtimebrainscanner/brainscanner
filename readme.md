@@ -31,12 +31,14 @@ Install the following programs
  - OpenViBE [http://openvibe.inria.fr/downloads/](http://openvibe.inria.fr/downloads/). Replace the default OpenViBE Acquisition Server config file with the one supplied in this folder. Otherwise make sure that the driver settings are correct every time the OpenViBE Acquisition Server is started. To replace the file move *openvibe-acquisition-server.conf* to *C:\Users\[username]\AppData\Roaming\openvibe*
  <!-- - Lab streaming layer []() -->
  - Clone or download this repository
+ - Install PsychoPy (http://www.psychopy.org/about/overview.html), NumPy, SciPy for creating and running stimulation files.
 
 
 ### Setting up the connection
+More information can be found in the mBrainTrain user manual (see [user manual](https://mbraintrain.com/wp-content/uploads/2016/08/SMARTING-User-Manual.pdf)).
+
 #### Setting up the Bluetooth connection:
 Insert Bluetooth dongle and open "BlueSoleil Space". Connect to the smarting device by right clicking on the question mark (the dongle can only be matched with a specific EEG amplifier) and choose "Connect to Bluetooth seriel port (COMX)". Make a note of the seriel port number (e.g. "COM6" as in the below figure). Disconnect the serial port by first right clicking on the question mark and choose "Disconnect Bluetooth serial port (COM6)".
-
 
 #### Using SmartingStreamer for impedance measurements 
 Open the Smarting Streamer and click connect. Choose the correct seriel port and press the orange connect button. Start by clicking "Measure impedence on ref" and click "start streaming signals". Fill gell into the ground electrode and the reference electrode and see the color of the reference channel change from red to green. Click "stop streaming signals" and choose "Measure impedance" and "Select Channels" followed by "start streaming signals". When the electrodes have changed from red to green you are ready to view the EEG signal (click "show signals"). There will be an artefact from the impedance measurement if you have not changed to "No impendance measurement".
@@ -57,8 +59,15 @@ Preprocessing steps of the visualized data can be activated by clicking (in the 
 "Plot data" will show the EEG signal with the chosen preprocessing settings.
 "Plot brain" will perform source localization using teVG (Hansen 2013, 2014) and then shows the localized cortical activitions. If teVG has been trained it will use the sparsity parameter obtained otherwise it will use a predefined value.
 
-"Train VG" is best performed when the headset is not connected. Load an existing EEG file which you wish to use for training the VG parameter by clicking "Load file" in the "EEG data source" window. Choose the desired settings for training the model in the visualization window. Normally, at least the filter and rereference options should be chosen. Click "Train VG". The parameter estimation will take some time, depending on the length of the inputtet EEG data. A mat-file called "gamma" will be saved. Remember to rename of remove this file is you do not wish to use it as input for "Plot brain".
+"Train VG" is best performed when the headset is not connected. Load an existing EEG file which you wish to use for training the VG parameter by clicking "Load file" in the "EEG data source" window. Choose the desired settings for training the model in the visualization window. Normally, at least the filter and rereference options should be chosen. Click "Train VG". The parameter estimation will take some time, depending on the length of the inputtet EEG data. A mat-file called "gamma" will be saved. Remember to rename of remove this file is you do not wish to use it as input for "Plot brain". 
 
+The forward model used in both "Plot brain" and "Train VG" was constructed in BrainStorm using a the ICBM152 template and was build using OPENMEEG BEM headmodelling (Gramfort, 2010).
+
+##### The Experiment window
+Classification is performed after a classification model has been trained. The training will be conducted using the preprocessing options chosen in the experiment window. Normally at least "Filter" should be chosen (if the classification model uses source localization the "Rereference should also be chosen"). If ASR is needed the load a suitable data set for this and the click ASR. When the desired options have been chosen, then click "Train Model" ("Start/stop" should be off). First the user is asked if source localization should be performed. If "1" is typed VG will be train the sparsity parameter regardless if this has already been done in "Train VG".
+A stimulation file and an EEG data file will be then be requested and finally the user will be asked whether the EEG data should be delayed with respect to the stimuli file. 
+
+The classification model is build towards classifying open vs. closed eyes. Filtering is e.g. set to [5,15] Hz and the electrodes of interest are O1 and O2 (is source localization is not chosen).
 
 ##### Common warnings encountered in the BrainScanner app
 The command window will display "input:noData" if the buffer does not contain data. Most of the times this just means that data was requested before new data was available. If you look in the log-file you often see that an empty data block is followed by a full data block (of e.g. 32 samples) and that a block of samples are in the buffer. The buffered data will be used/saved in the next iteration. 
@@ -66,10 +75,15 @@ The command window will display "input:noData" if the buffer does not contain da
 The message "input:shortBlock" will be displayed if less samples than the predetermined blocksize are available. This happens occasionaly and the system handles it by throwing away these samples. This favors realtime applications but will cause small shifts in the saved data with respect to timing and will thus affect offline analysis. This could be avoided by saving all data points.
 
 
+### Running an open/closed eyes experiment
 
-More information can be found in the mBrainTrain user manual (see [user manual](https://mbraintrain.com/wp-content/uploads/2016/08/SMARTING-User-Manual.pdf) page 9).
-
-
+- Save 1 minute of data while the subject has open eyes and with as few artifacts as possible
+- Save an experiment training run
+- Set "Start/stop" to off
+- In the experiment window click "Filter", "Rereference", "Load ASR file" (choose the EEG data containing the 1 minute of data) and "ASR".
+- Click "Train Model", type "1" in the command window for extracting features from source localization, choose the stimulation and EEG file used in the experiment training run. Delay by 5 seconds.
+- When the training is completed turn on "Start/stop" this will now output "Closed eyes" or "Open eyes" in the Command window. A probality of closed eyes is also outputtet.
+- To save a test run start saving EEG data at the same time a stimulation file is run.
 
 
 ### Reading data
@@ -99,6 +113,8 @@ Mullen, T., Kothe, C., Chi, M., Ojeda, A., Kerth, T., Makeig, S., … Cauwenberg
 Hansen, S. T., Stahlhut, C., & Hansen, L. K. (2013). Expansion of the Variational Garrote to a Multiple Measurement Vectors Model. In Twelfth Scandinavian Conference on Artificial Intelligence (pp. 105–114). Retrieved from http://scholar.google.com/scholar?hl=en&btnG=Search&q=intitle:Expansion+of+the+Variational+Garrote+to+a+Multiple+Measurement+Vectors+Model#0
 
 Hansen, S. T., & Hansen, L. K. (2014). EEG source reconstruction using sparse basis function representations. In 2014 International Workshop on Pattern Recognition in Neuroimaging (pp. 1–4). IEEE. http://doi.org/10.1109/PRNI.2014.6858521
+
+Gramfort, A., Papadopoulo, T., Olivi, E., & Clerc, M. (2010). OpenMEEG: opensource software for quasistatic bioelectromagnetics. Biomedical Engineering Online, 9(1), 45. http://doi.org/10.1186/1475-925X-9-45
 
 ## Acknowledgment
 
