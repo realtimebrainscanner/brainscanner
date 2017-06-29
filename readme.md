@@ -1,11 +1,8 @@
-# Real-time EEG source localization
-**Using a sparse Bayesian approach**
+# Real-time EEG source localization and classification
 
 <!-- # Introduction -->
 In the following we describe a framework for performing real-time EEG source localization and classification. The program was developed at the Technical University of Denmark (DTU Compute) and can be used when recording EEG signals from a Smarting mBrainTrain EEG device. The developed program performs and visualizes source localization in real-time as well as provides real-time task classification.
 Currently only Windows is supported.
-
-
 
 ## System
 The used equipment is an EEG headset from Smarting mBrainTrain which connects to the PC via Bluetooth.
