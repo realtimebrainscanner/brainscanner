@@ -6,7 +6,7 @@ fs=self.options.samplingRate;
 % number of channels
 run_source=out.run_source;
 uf=out.uf;% upsample factor
-num_channels=24;
+num_channels=self.options.numChannels;
 %%
 
 % filter and rereference
@@ -31,13 +31,13 @@ if isfield(self.options.experiment,'asr_state')
 end
 %% Source localize
 if run_source==1
-    opts.bad_chans=[];
+    
     basis = load('model/basis_functions_24ch.mat','Qg');
     basisFunctions = basis.Qg;    % 569 basis functions uni-lateral
     opts.basisFunctions = basisFunctions;
     easyCapModelFull = load('model/Gain_mbraintrain_24ch.mat','Gain');
     easyCapModelFull=easyCapModelFull.Gain;
-    easyCapModelFull(opts.bad_chans,:)=[];
+    easyCapModelFull(self.options.bad_chans,:)=[];
     no_chan=size(easyCapModelFull,1);
     easyCapModelFull=(eye(no_chan)-1/no_chan)*easyCapModelFull; % set gain to have average reference
     forwardModel = easyCapModelFull*basisFunctions';
