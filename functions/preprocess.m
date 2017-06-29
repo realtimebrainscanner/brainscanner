@@ -5,12 +5,12 @@ function data = preprocess( data, options )
 %               Filtering
 %               Re-refering                
 
-    numChannels = size(data, 1);
 
     % Remove bad channels
     if ~isempty(options.bad_chans)
         data(options.bad_chans,:)=[];
     end
+    numChannels = size(data, 1);
 
     if options.filter
         for i=1:numChannels
