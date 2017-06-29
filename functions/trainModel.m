@@ -1,7 +1,7 @@
 function out=trainModel(options)
 out.options=options;
 fs=options.samplingRate;
-num_channels = 24;% number of channels
+num_channels = options.numChannels;% number of channels
 run_source=input('Run source localization (0/1): ');
 out.run_source=run_source;
 uf=2;% upsample factor
@@ -85,13 +85,12 @@ data_preprocessed = {data_preprocessed};
 train_trial_idx = 1;
 %% Source localize
 if run_source==1
-    opts.bad_chans=[];
     basis = load('model/basis_functions_24ch.mat','Qg');
     basisFunctions = basis.Qg;    % 569 basis functions uni-lateral
     opts.basisFunctions = basisFunctions;
     easyCapModelFull = load('model/Gain_mbraintrain_24ch.mat','Gain');
     easyCapModelFull=easyCapModelFull.Gain;
-    easyCapModelFull(opts.bad_chans,:)=[];
+    easyCapModelFull(options.bad_chans,:)=[];
     no_chan=size(easyCapModelFull,1);
     easyCapModelFull=(eye(no_chan)-1/no_chan)*easyCapModelFull; % set gain to have average reference
     forwardModel = easyCapModelFull*basisFunctions';
