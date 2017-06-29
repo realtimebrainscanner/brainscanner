@@ -72,6 +72,8 @@ The classification model is build towards classifying open vs. closed eyes. Filt
 ##### Common warnings encountered in the BrainScanner app
 The command window will display "input:noData" if the buffer does not contain data. Most of the times this just means that data was requested before new data was available. If you look in the log-file you often see that an empty data block is followed by a full data block (of e.g. 32 samples) and that a block of samples are in the buffer. The buffered data will be used/saved in the next iteration. 
 
+To minimize disruption of data streaming have as few programs active as possible, and use the "Airplane mode" of the pc.
+
 The message "input:shortBlock" will be displayed if less samples than the predetermined blocksize are available. This happens occasionaly and the system handles it by throwing away these samples. This favors realtime applications but will cause small shifts in the saved data with respect to timing and will thus affect offline analysis. This could be avoided by saving all data points.
 
 
