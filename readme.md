@@ -24,6 +24,7 @@ The headset connects to a computer via Bluetooth using a BlueSoleil Bluetooth do
 
 Using the OpenVIBE Acquisition Server, the data is sampled from the EEG device and made available through lab streaming layer ([LSL](https://github.com/sccn/labstreaminglayer)). By using the [lab streaming layer library for Matlab](https://github.com/sccn/labstreaminglayer/tree/master/LSL/liblsl-Matlab) the data is read into the Matlab application.
 
+![](figures/EEGsystem.JPG)
 
 ### Installation
 Install the following programs
