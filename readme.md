@@ -79,13 +79,16 @@ The message "input:shortBlock" will be displayed if less samples than the predet
 
 ### Running an open/closed eyes experiment
 
-- Save 1 minute of data while the subject has open eyes and with as few artifacts as possible
-- Save an experiment training run
-- Set "Start/stop" to off
-- In the experiment window click "Filter", "Rereference", "Load ASR file" (choose the EEG data containing the 1 minute of data) and "ASR".
+- Turn on "Airplane mode"
+- Connect and disconnect to the correct EEG amplifier using BlueSoleil, open SmartStreaming and fill gel in electrodes while checking impedances. Disconnect SmartStreaming and start streaming through OpenVibe. See above for more details.
+- Open BrainScanner in Matlab and connect headset and start streaming.
+- Save 1 minute of data while the subject has open eyes and with as few artifacts as possible.
+- Run and save an experiment training run.
+- Set "Start/stop" to off.
+- In the experiment window click "Filter", "Rereference", "Load ASR file" (choose the EEG data containing the 1 minute of data) and then click "ASR".
 - Click "Train Model", type "1" in the command window for extracting features from source localization, choose the stimulation and EEG file used in the experiment training run. Delay by 5 seconds.
 - When the training is completed turn on "Start/stop" this will now output "Closed eyes" or "Open eyes" in the Command window. A probality of closed eyes is also outputtet.
-- To save a test run start saving EEG data at the same time a stimulation file is run.
+- To save a test run start saving EEG data at the same time as a stimulation file is run.
 
 
 ### Reading data
