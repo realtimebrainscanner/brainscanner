@@ -2,13 +2,13 @@
 **Using a sparse Bayesian approach**
 
 <!-- # Introduction -->
-Real-time EEG source localization is a framework for performing real-time EEG source localization. Developed at Technical University of Denmark (DTU Compute) for recording EEG signals from a Smarting mBrainTrain EEG device. The developed program performs and visualizes source localization in real-time as well as provides real-time task classification.
+In the following we describe a framework for performing real-time EEG source localization and classification. The program was developed at the Technical University of Denmark (DTU Compute) and can be used when recording EEG signals from a Smarting mBrainTrain EEG device. The developed program performs and visualizes source localization in real-time as well as provides real-time task classification.
 Currently only Windows is supported.
 
 
 
 ## System
-The used equipment is an EEG headset from Smarting mBrainTrain that connects via Bluetooth.
+The used equipment is an EEG headset from Smarting mBrainTrain which connects to the PC via Bluetooth.
 Device specifics:
 - Sample rate: 250 Hz (500 Hz is also possible)
 - 24 sensor EEG cap from EasyCap (https://www.mbraintrain.com/wp-content/uploads/2016/01/RBE-24-STD_legacy.pdf)
@@ -20,7 +20,7 @@ Device specifics:
 <!--- - [ ] insert figure of headset-->
 
 
-The headset connects to a computer via Bluetooth using a BlueSoleil Bluetooth dongle that makes the device available as a Serial COM interface. See [mBrainTrain user manual](https://mbraintrain.com/wp-content/uploads/2016/08/SMARTING-User-Manual.pdf) for more details on this.
+The headset connects to a computer via Bluetooth using a BlueSoleil Bluetooth dongle that makes the device available as a Serial COM interface. See [mBrainTrain user manual](https://mbraintrain.com/wp-content/uploads/2016/08/SMARTING-User-Manual.pdf) for more details.
 
 Using the OpenVIBE Acquisition Server, the data is sampled from the EEG device and made available through lab streaming layer ([LSL](https://github.com/sccn/labstreaminglayer)). By using the [lab streaming layer library for Matlab](https://github.com/sccn/labstreaminglayer/tree/master/LSL/liblsl-Matlab) the data is read into the Matlab application.
 
@@ -39,57 +39,79 @@ Install the following programs
 More information can be found in the mBrainTrain user manual (see [user manual](https://mbraintrain.com/wp-content/uploads/2016/08/SMARTING-User-Manual.pdf)).
 
 #### Setting up the Bluetooth connection:
-Insert Bluetooth dongle and open "BlueSoleil Space". Connect to the smarting device by right clicking on the question mark (the dongle can only be matched with a specific EEG amplifier) and choose "Connect to Bluetooth seriel port (COMX)". Make a note of the seriel port number (e.g. "COM6" as in the below figure). Disconnect the serial port by first right clicking on the question mark and choose "Disconnect Bluetooth serial port (COM6)".
+Insert Bluetooth dongle and open "BlueSoleil Space". Connect to the smarting device by right clicking on the question mark (the dongle can only be matched with a specific EEG amplifier) and choose "Connect to Bluetooth serial port (COMX)". Make a note of the serial port number (e.g. "COM6" as in the below figure). Disconnect the seriel port by first right clicking on the question mark and choose "Disconnect Bluetooth serial port (COM6)".
+
+<img src="figures/BlueSoleil.png" width="600">
+
 
 #### Using SmartingStreamer for impedance measurements 
-Open the Smarting Streamer and click connect. Choose the correct seriel port and press the orange connect button. Start by clicking "Measure impedence on ref" and click "start streaming signals". Fill gell into the ground electrode and the reference electrode and see the color of the reference channel change from red to green. Click "stop streaming signals" and choose "Measure impedance" and "Select Channels" followed by "start streaming signals". When the electrodes have changed from red to green you are ready to view the EEG signal (click "show signals"). There will be an artefact from the impedance measurement if you have not changed to "No impendance measurement".
-When you are satisfied with the impedances click disconnect in the top.
+Open the Smarting Streamer and click connect. Choose the correct serial port and press the orange connect button. Start by clicking "Measure impedence on ref" and click "start streaming signals". Fill gel into the ground electrode and the reference electrode and see the color of the reference channel change from red to green. Click "stop streaming signals" and choose "Measure impedance" and "Select Channels" followed by "start streaming signals". When the electrodes have changed from red to green you are ready to view the EEG signal (click "show signals"). There will be an artefact from the impedance measurement if you have not changed to "No impendance measurement".
+When you are satisfied with the impedances click disconnect in the top and close SmartingStreamer.
+
+A video guide to setting up the guide can be found here https://www.youtube.com/watch?v=nWBARTdZ0e8.
+
+<img src="figures/SmartingStreamer.png" width="600">
+
 
 #### Setting up the OpenViBE connection
-Open the "openvibe acquisition server". Click "Driver Properties" and change the port number to the seriel port noted earlier, press Enter before clicking Apply (otherwise the change will not be saved). This sted has to be conducted even though the openvibe-acquisition-server.conf file has been replaced. Click "Connect" and "Play", when this button becomes available.
+Open the "openvibe acquisition server". Click "Driver Properties" and change the port number to the serial port number noted earlier, press Enter before clicking Apply (otherwise the change will not be saved). This step has to be conducted even though the openvibe-acquisition-server.conf file has been replaced. Click "Connect" and "Play".
+
+<img src="figures/OpenVibe.png" width="600">
 
 #### Using the BrainScanner GUI
 Open Matlab and go to the brainscanner folder. Type "BrainScanner" in the Command window. Click "Connect headset" and then "Start/stop". 
 
+<img src="figures/BrainScannerApp.png" width="600">
+
 ##### The Visualization window
 Preprocessing steps of the visualized data can be activated by clicking (in the "Visualization" square) 
-- "Filter": bandpass filters the data to [1,45] Hz)
-- "Rereference": changes the montage to have average reference
+- "Filter": bandpass filters the data to [1,45] Hz).
+- "Rereference": changes the montage to have average reference.
 - "ASR": performs artifact removal by artifact subspace reconstruction (Mullen 2015). ASR can only be activated if a data file has been loaded by clicking "Load ASR data". This button both imports data for ASR and trains the ASR model. Note that the ASR is trained with the preprocessing steps chosen in the "Visualization" square.
 
 "Plot data" will show the EEG signal with the chosen preprocessing settings.
 "Plot brain" will perform source localization using teVG (Hansen 2013, 2014) and then shows the localized cortical activitions. If teVG has been trained it will use the sparsity parameter obtained otherwise it will use a predefined value.
 
-"Train VG" is best performed when the headset is not connected. Load an existing EEG file which you wish to use for training the VG parameter by clicking "Load file" in the "EEG data source" window. Choose the desired settings for training the model in the visualization window. Normally, at least the filter and rereference options should be chosen. Click "Train VG". The parameter estimation will take some time, depending on the length of the inputtet EEG data. A mat-file called "gamma" will be saved. Remember to rename of remove this file is you do not wish to use it as input for "Plot brain". 
+"Train VG" is best performed when the headset is not connected. Load the existing EEG file you wish to use for training the VG parameter by clicking "Load file" in the "EEG data source" window. Choose the desired settings for training the VG model in the visualization window. Normally, at least the filter and rereference options should be chosen. Click "Train VG" and then "Start/stop". The parameter estimation will take some time, depending on the length of the inputtet EEG data. A mat-file called "gamma" will be saved. Remember to rename of remove this file if you do not wish to use it as input for "Plot brain". 
 
 The forward model used in both "Plot brain" and "Train VG" was constructed in BrainStorm using a the ICBM152 template and was build using OPENMEEG BEM headmodelling (Gramfort, 2010).
 
 ##### The Experiment window
-Classification is performed after a classification model has been trained. The training will be conducted using the preprocessing options chosen in the experiment window. Normally at least "Filter" should be chosen (if the classification model uses source localization the "Rereference should also be chosen"). If ASR is needed the load a suitable data set for this and the click ASR. When the desired options have been chosen, then click "Train Model" ("Start/stop" should be off). First the user is asked if source localization should be performed. If "1" is typed VG will be train the sparsity parameter regardless if this has already been done in "Train VG".
-A stimulation file and an EEG data file will be then be requested and finally the user will be asked whether the EEG data should be delayed with respect to the stimuli file. 
+Classification is performed after a classification model has been trained. The training will be conducted using the preprocessing options chosen in the experiment window. Normally at least "Filter" should be chosen (if the classification model uses source localization the "Rereference" option should also be chosen"). If ASR is needed then load a suitable data set for this and the click ASR (in the "Experiment" window). When the desired options have been chosen, then click "Train Model" ("Start/stop" should be off). First the user is asked if source localization should be performed. If "1" is typed VG will train the sparsity parameter regardless if this has already been done in "Train VG".
+A stimulation file and an EEG data file will then be requested and finally the user will be asked whether the EEG data should be delayed with respect to the stimuli file. When the model is done training turn "Start/stop" on, classification will then begin automatically and the predicted stimulation is stored in "predicted_stim.mat". Remember to remove or rename this file before a new run.
 
-The classification model is build towards classifying open vs. closed eyes. Filtering is e.g. set to [5,15] Hz and the electrodes of interest are O1 and O2 (is source localization is not chosen).
+The classification model is build towards classifying open vs. closed eyes. Filtering is e.g. set to [5,15] Hz and the electrodes of interest are O1 and O2 (if source localization is not chosen).
 
 ##### Common warnings encountered in the BrainScanner app
 The command window will display "input:noData" if the buffer does not contain data. Most of the times this just means that data was requested before new data was available. If you look in the log-file you often see that an empty data block is followed by a full data block (of e.g. 32 samples) and that a block of samples are in the buffer. The buffered data will be used/saved in the next iteration. 
 
-To minimize disruption of data streaming have as few programs active as possible, and use the "Airplane mode" of the pc.
+To minimize disruption of data streaming have as few programs active as possible, and use the "Airplane mode" of the PC.
 
 The message "input:shortBlock" will be displayed if less samples than the predetermined blocksize are available. This happens occasionaly and the system handles it by throwing away these samples. This favors realtime applications but will cause small shifts in the saved data with respect to timing and will thus affect offline analysis. This could be avoided by saving all data points.
+
+##### Output files
+Two files are generated and updated while "Save data" is on. 
+"raw_date time.csv" contains the raw data, i.e. no preprocessing has been done on this data. In addition to the EEG signal a relative time stamp is stored for each time sample.
+"logdate time.csv" contains the blocksize which is however many samples was extracted from the buffer, bufferBlockSize contains how many samples remain in the buffer. "UpdateDuration" contain how many seconds a block extraction took. This file is mostly used for error checking.
+
 
 
 ### Running an open/closed eyes experiment
 
 - Turn on "Airplane mode"
-- Connect and disconnect to the correct EEG amplifier using BlueSoleil, open SmartStreaming and fill gel in electrodes while checking impedances. Disconnect SmartStreaming and start streaming through OpenVibe. See above for more details.
+- Connect and disconnect to the correct EEG amplifier using BlueSoleil, open SmartStreaming and fill gel in electrodes while checking impedances. Disconnect SmartingStreaming and start streaming through OpenVibe. See above for more details.
 - Open BrainScanner in Matlab and connect headset and start streaming.
-- Save 1 minute of data while the subject has open eyes and with as few artifacts as possible.
+- Save 1 minute of data while the subject has open eyes while minimzing the amount of artifacts.
 - Run and save an experiment training run.
 - Set "Start/stop" to off.
 - In the experiment window click "Filter", "Rereference", "Load ASR file" (choose the EEG data containing the 1 minute of data) and then click "ASR".
+- Turn "Start/stop" off.
 - Click "Train Model", type "1" in the command window for extracting features from source localization, choose the stimulation and EEG file used in the experiment training run. Delay by 5 seconds.
-- When the training is completed turn on "Start/stop" this will now output "Closed eyes" or "Open eyes" in the Command window. A probality of closed eyes is also outputtet.
+- When the training is completed turn on "Start/stop" this will now output "Closed eyes" or "Open eyes" in the Command window. The calculated probality of closed eyes is also outputtet.
 - To save a test run start saving EEG data at the same time as a stimulation file is run.
+
+<img src="figures/Timeline.jpg" width="600">
+
 
 
 ### Reading data
