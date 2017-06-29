@@ -109,6 +109,13 @@ Two files are generated and updated while "Save data" is on.
 
 <img src="figures/Timeline.jpg" width="600">
 
+### Data processing
+The core processing is handled by the function <tt>processData()</tt> in <tt>EEGStreamer.m</tt>. This includes reading data from the device (or playback from an earlier recording), pre-processing, source localization, visualization, and data logging. 
+
+The function is invoked periodically by a Matlab timer running with a fixed interval of 128ms. The timer is activated/deactivated by pressing the start/stop button in the graphical user interface. Note that if the function <tt>processData()</tt> is the still running when the timer is activated, the next call to the function will be dropped without notice. For example, this can happen if the execution time of <tt>processData()</tt> exceeds the timer interval (128ms).
+
+The system is designed to operate on data in blocks of 32 samples (128ms). However, it is not always the case that there is exactly 32 samples available from the device and therefore the function <tt>chunkSizeCorrection()</tt> ensures that the is always exactly 32 samples available for subsequent processing. For example, it happens occasionally that there are 0 samples available when the application pulls data from the device and then 64 samples in the next round. In this case, <tt>chunkSizeCorrection()</tt> will divide the 64 samples into two block of 32 samples each. For more details, see implementation of <tt>chunkSizeCorrection()</tt>.
+
 
 
 ### Reading data
