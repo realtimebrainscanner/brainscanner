@@ -114,8 +114,7 @@ The core processing is handled by the function <tt>processData()</tt> in <tt>EEG
 
 The function is invoked periodically by a Matlab timer running with a fixed interval of 128ms. The timer is activated/deactivated by pressing the start/stop button in the graphical user interface. Note that if the function <tt>processData()</tt> is the still running when the timer is activated, the next call to the function will be dropped without notice. For example, this can happen if the execution time of <tt>processData()</tt> exceeds the timer interval (128ms).
 
-The system is designed to operate on data in blocks of 32 samples (128ms). However, it is not always the case that there is exactly 32 samples available from the device and therefore the function <tt>chunkSizeCorrection()</tt> ensures that the is always exactly 32 samples available for subsequent processing. For example, it happens occasionally that there are 0 samples available when the application pulls data from the device and then 64 samples in the next round. In this case, <tt>chunkSizeCorrection()</tt> will divide the 64 samples into two block of 32 samples each. For more details, see implementation of <tt>chunkSizeCorrection()</tt>.
-
+The system is designed to operate on data in blocks of 32 samples (128ms). However, it is not always the case that there is exactly 32 samples available from the device and therefore the function <tt>chunkSizeCorrection()</tt> ensures that there is always exactly 32 samples available for subsequent processing. For example, it happens occasionally that there are 0 samples available when the application pulls data from the device and then 64 samples in the next round. In this case, <tt>chunkSizeCorrection()</tt> will divide the 64 samples into two block of 32 samples each. For more details, see implementation of <tt>chunkSizeCorrection()</tt>.
 
 
 ### Reading data
@@ -124,6 +123,12 @@ The system is designed to operate on data in blocks of 32 samples (128ms). Howev
 
 The data is read into a pseudo-buffer with a buffer size of 64 samples equal to two blocks (of each 32 samples) from the OpenViBE Acquisition Server.
 
+## The stimuli script
+The stimuli folder contains a script that handles the execution of the experimental paradigm, i.e. the script play sounds to indicate when the subject should open and close his/her eyes. The script is written in Python using the Psychopy module. The images shown to the subjects should be located in the stimuli/images directory. 
+
+The script also outputs a file that contains information about the experimental paradigm, i.e. open/closed eyes vs time (0=open eyes, 1 = closed eyes). 
+
+While using the Psychopy script on a Dell Latitude E7440 laptop, we observed that the script crashes if the volume up/down button were pushed during execution of the script.
 
 
 ## Real-time Matlab application
