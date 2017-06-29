@@ -142,6 +142,8 @@ if run_source==1
     figure,plot(abs(co))
     co(isnan(co))=0;
     [i,j]=sort(abs(co),'descend');
+    legend('Absolute value of correlation between sources (basis functions) and stimuli')
+    xlabel('Basis function index');
     figure,
     tr=1;
     plot(sum(Sources{tr}(j(1),:).^2,1)),hold on,
@@ -149,6 +151,7 @@ if run_source==1
     stim=stim(:);
     hold on,plot(stim);
     legend('Source with maximum correlation to stimulation','Stimulation')
+    xlabel('Time samples');
     out.BFcorr=j;
 end
 %% Run source localization again where the support is initialiazed to be active in the two most correlated sources.
@@ -205,7 +208,6 @@ for idx_trial = 1:num_trials
     
     fprintf('done.\n');
     
-    subplot(2, 2, idx_trial);
     imagesc(t, f, log10(S)'); axis xy;
     title(sprintf('Trial %d', idx_trial));
     ylim([1, 15]);
@@ -275,5 +277,6 @@ for idx_trial = 1:num_trials
     legend('Stimuli', 'Prediction')
     ylim([-0.1, 1.1]);
     title(sprintf('Trial %d', idx_trial));
-    grid on;  
+    grid on; 
+    xlabel('Time');
 end
