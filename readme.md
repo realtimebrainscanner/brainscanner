@@ -128,7 +128,7 @@ The stimuli folder contains a script that handles the execution of the experimen
 
 The script also outputs a file that contains information about the experimental paradigm, i.e. open/closed eyes vs time (0=open eyes, 1 = closed eyes). 
 
-While using the Psychopy script on a Dell Latitude E7440 laptop, we observed that the script crashes if the volume up/down button were pushed during execution of the script.
+While using the Psychopy script on a Dell Latitude E7440 laptop, we observed that the script crashes if the volume up/down buttons were pushed during execution of the script.
 
 
 ## Real-time Matlab application
