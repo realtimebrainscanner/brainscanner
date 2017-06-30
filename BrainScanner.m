@@ -76,14 +76,14 @@ opts.refreshrate = 1/(2*opts.blockSize/opts.samplingRate); % Maybe change this!
 opts.artefactRemoval = 0;
 opts.filter = 0;
 opts.reref = 0;
-opts.bad_chans=[];%[5 21];
+opts.bad_chans=[];%
 
 % Options for experiment
 [opts_exp.filterB, opts_exp.filterA] = butter(4,[5 15]/(opts.samplingRate/2));
 opts_exp.artefactRemoval = 0;
 opts_exp.filter = 0;
 opts_exp.reref = 0;
-opts_exp.bad_chans=[];%[5 21];
+opts_exp.bad_chans=opts.bad_chans;% e.g. [5 21];
 opts.experiment = opts_exp;
 
 
@@ -156,7 +156,7 @@ opts.saveData = 0;
 opts.log = 0;
 opts.verbose = 1;
 opts.trainVG = 0;
-opts.numSamplesCalibrationVGData=20*opts.blockSize;
+opts.numSamplesCalibrationVGData=4*opts.blockSize;
 
 handles.eeg = EEGStream(lib, opts, handles);
 
@@ -277,14 +277,20 @@ if hObject.Value
         handles.text17.String = 'Connected';
         handles.togglebutton1.Enable = 'on';
         handles.text23.String = 'No file';
+        handles.togglebutton18.Enable = 'off';
+
     else
         hObject.Value = 0;
+        handles.togglebutton18.Enable = 'on';
+
     end
 else
     if handles.eeg.isConnected
         handles.eeg.disconnect(); end;
     handles.togglebutton1.Enable = 'off';
     handles.text17.String = 'Off';
+            handles.togglebutton18.Enable = 'on';
+
 end
 
 
@@ -368,14 +374,8 @@ function togglebutton18_Callback(hObject, eventdata, handles)
 % hObject    handle to togglebutton18 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-if hObject.Value
-    handles.text26.String = 'On';
-else
-    handles.text26.String = 'Off';
-end
-
 handles.eeg.options.trainVG = hObject.Value;
+
 % Hint: get(hObject,'Value') returns toggle state of togglebutton18
 
 % --- Executes on button press in togglebutton19.
