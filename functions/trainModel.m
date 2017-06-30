@@ -36,7 +36,7 @@ for idx_trial = 1:num_trials
     % remove first 5s.
     prompt='Type number of seconds to delay EEG: ';
     EEGdelay = input(prompt);
-    subject_data =  subject_data((EEGdelay*fs)+1:end, 1:num_channels);
+    subject_data =  subject_data((EEGdelay*fs)+1:end, 1:24);
     
         % how many samples do have labels for?
     if isfield(options.experiment,'asr_state')
@@ -48,14 +48,14 @@ for idx_trial = 1:num_trials
         else
         num_labelled_samples = length(stim_data.stim)*fs;
     end
-    data{idx_trial} = subject_data(1:num_labelled_samples, 1:num_channels)';
+    data{idx_trial} = subject_data(1:num_labelled_samples,:)';
     
     
 end;
 
 %% Apply preprocessing block-wise
 wl=1/uf*fs;
-data_preprocessed = zeros(size(data{idx_trial}));
+data_preprocessed = zeros(24-length(options.experiment.bad_chans),size(data{1},2));
 for d=1:floor(length(data{1})/wl)
     [data_preprocessed(:,(d-1)*wl+1:wl*d)] = preprocess(data{idx_trial}(:,(d-1)*wl+1:wl*d), options.experiment);
 end
