@@ -14,6 +14,7 @@ classdef EEGStream < handle
         isConnected = false;
         replayFileName
         replayDataFile
+        DataFileLength
         showExperiment = false;
         experimentEvents
         experimentEventNames
@@ -50,6 +51,7 @@ classdef EEGStream < handle
         calibrationVGData = [];
         gamma_medianAll=[];
         gamma_meanAll=[];
+        VGcount=0;
         
         % ASR
         asr_state = struct;
@@ -224,10 +226,13 @@ classdef EEGStream < handle
                 end
                 
                 %% train VG for source localization
-                 if self.options.trainVG
+                 if self.options.trainVG && ~isempty(self.replayDataFile) &&self.isConnected==0
                     [gamma_mean,gamma_median]=self.trainVG(processedData);
+
                  end
-                
+%                  if isempty(self.replayDataFile)||self.isConnected==1
+%                         disp('Please make sure a data file is loaded and the device is not connected, trainVG can only be used in offline mode\n')
+%                   end
                 
                 %% Various data visualization
                 if self.showData
@@ -363,6 +368,7 @@ classdef EEGStream < handle
             if size(self.calibrationVGData, 2) == self.options.numSamplesCalibrationVGData;
                 % we are done collecting calibration data, so we can now
                 % trainVG
+                self.VGcount=self.VGcount+1;
                 opts.run_prune=1;opts.prune=1e-2;opts.pnorm = 1;
                  
                 [gamma_mean, gamma_median]= teVGGD_wcross(self.forwardModel,self.calibrationVGData, opts);
@@ -370,13 +376,20 @@ classdef EEGStream < handle
                 self.calibrationVGData = [];
                 self.gamma_meanAll = [self.gamma_meanAll gamma_mean];gmean=self.gamma_meanAll;
                 self.gamma_medianAll = [self.gamma_medianAll gamma_median];gmedian=self.gamma_medianAll;
-                save gamma gmedian gmean
+                
+                
+                if self.VGcount+1>floor(self.DataFileLength/self.options.numSamplesCalibrationVGData);
+                    save gamma gmedian gmean
+                    self.options.trainVG = 0;
+                    disp('Done training sparsity for VG');
+                end
+                if self.VGcount==1
+                    disp('Training sparsity for VG');
+                end
             else 
-                size(self.calibrationVGData)
                 gamma_mean=NaN;gamma_median=NaN;
                 self.gamma_meanAll = [self.gamma_meanAll gamma_mean];gmean=self.gamma_meanAll;
                 self.gamma_medianAll = [self.gamma_medianAll gamma_median];gmedian=self.gamma_medianAll;
-                save gamma gmedian gmean
             end
         end
         
@@ -468,6 +481,7 @@ classdef EEGStream < handle
                 disp('Read file');
                 tableData = readtable([self.replayFileName]);
                 self.replayDataFile = tableData{:, 1:25}';
+                self.DataFileLength=size(self.replayDataFile,2);
             end
             rawData = self.replayDataFile(1:end-1,1:self.options.blockSize);
             timeStamps = self.replayDataFile(end,1:self.options.blockSize);
